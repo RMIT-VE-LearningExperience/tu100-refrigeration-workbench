@@ -52,3 +52,9 @@ First visit offers Explore freely or Guided practice. Guided steps appear inside
 The reversing valves now have visible markers by default. Crowded 44px targets form a group marker that zooms into the area, then reveals individually selectable valves. Hover and keyboard focus reveal names; selection highlights the component without changing valve state. The first-use image instruction disappears after a successful component selection. The inspector offers Zoom to component for mapped valves, while Fit restores the whole unit. Labels reveals the remaining mapped valves; the component list remains available for all valves, including the unmapped LRB. Photo markers for observation tubes remain deferred until their positions are verified.
 
 Browser checks cover desktop/mobile appearance, group expansion, keyboard focus transfer, selection without stopping the simulation, and component zoom. Marker grouping tests cover whole-unit and enlarged scales and target preservation.
+
+## Highlighted guided tutorial
+
+Start tutorial launches a seven-step walkthrough anchored to the real setup, Run button, HP1 photo marker, valve action, view selector, tube measurements and superheat/subcooling exercise. A live spotlight follows target position during scrolling, resizing and photo zoom. Instructions remain outside the target; mobile panel height leaves room for the coach. The guide waits for running state, HP1 selection, the Glass tubes view and correct checked answers. Back, Skip, Close and Escape are supported; exit returns focus to Start tutorial. A keyboard shortcut button moves focus to the required control. Loading the example resets the teaching circuit; backward navigation does not repeat that reset.
+
+Browser checks completed the seven-step flow on desktop and at 390 × 844, including actual valve selection, view changes, answers and completion. The tutorial does not change the physical-model equations or claim real gas-flow measurement.

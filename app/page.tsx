@@ -1,5 +1,6 @@
 'use client';
 import './calm.css';
+import { GuidedTour } from '@/components/trainer/guided-tour';
 import { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import {
@@ -409,11 +410,22 @@ export default function Home() {
   const closeTour = () => {
     setTourStep(null);
     setSheetOpen(false);
+    requestAnimationFrame(() =>
+      document
+        .querySelector<HTMLButtonElement>('.calm-tutorial-entry')
+        ?.focus({ preventScroll: true }),
+    );
   };
   const chooseMode = (guided: boolean) => {
     setDialog(null);
     setTourStep(guided ? 0 : null);
     setSheetOpen(guided);
+    if (guided) {
+      setView('equipment');
+      setSelected(null);
+      setHotspots(false);
+      setFocusRequest(0);
+    }
     try {
       localStorage.setItem('tu100-simple-welcome', 'seen');
     } catch {}
@@ -601,7 +613,7 @@ export default function Home() {
   const selectValve = (key: Valve) => {
     setInspected(true);
     setSelected(key);
-    setSheetOpen(true);
+    setSheetOpen(tourStep === 2 ? false : true);
   };
   const temperatureRows = (keys?: readonly string[]) => (
     <div className="temperature-list">
@@ -629,118 +641,71 @@ export default function Home() {
   );
   const inspector = (
     <>
-      {tourStep !== null ? (
-        <section className="calm-guide">
-          <p className="calm-kicker">GUIDED PRACTICE · {tourStep + 1} / 4</p>
-          <h2>
-            {
-              [
-                'Set up the unit',
-                'Run the circuit',
-                'Observe the refrigerant',
-                'Calculate superheat',
-              ][tourStep]
-            }
-          </h2>
-          <p>
-            {
-              [
-                'Start with the R134a cooling configuration.',
-                'Press Run in the top bar to calculate the steady-state readings.',
-                'Compare the mixture at the evaporator inlet with liquid at the condenser outlet.',
-                'Use the temperatures below. Superheat and subcooling are temperature differences.',
-              ][tourStep]
-            }
-          </p>
-          {tourStep === 0 ? (
-            <Button
-              onClick={() => {
-                reset();
-                setView('equipment');
-                setTourStep(1);
+      {tourStep === 6 ? (
+        <section className="calm-exercise">
+          <dl>
+            <div>
+              <dt>Evaporator outlet</dt>
+              <dd>{v ? v.Teo.toFixed(1) + '°C' : '—'}</dd>
+            </div>
+            <div>
+              <dt>Evaporator dew point</dt>
+              <dd>{v ? v.Tevap.toFixed(1) + '°C' : '—'}</dd>
+            </div>
+            <div>
+              <dt>Condenser outlet</dt>
+              <dd>{v ? v.Tco.toFixed(1) + '°C' : '—'}</dd>
+            </div>
+            <div>
+              <dt>Condenser bubble point</dt>
+              <dd>{v ? v.Tbubble.toFixed(1) + '°C' : '—'}</dd>
+            </div>
+          </dl>
+          <label>
+            Superheat (K)
+            <Input
+              type="number"
+              value={answers.sh}
+              onChange={(e) => {
+                setAnswers({ ...answers, sh: e.target.value });
+                setChecked(false);
               }}
-            >
-              Load starting circuit
-            </Button>
-          ) : tourStep === 1 ? (
-            <Button
-              disabled={!v}
-              onClick={() => {
-                setView('tubes');
-                setTourStep(2);
-                setSheetOpen(false);
+            />
+          </label>
+          <label>
+            Subcooling (K)
+            <Input
+              type="number"
+              value={answers.sc}
+              onChange={(e) => {
+                setAnswers({ ...answers, sc: e.target.value });
+                setChecked(false);
               }}
-            >
-              Inspect the tubes
-            </Button>
-          ) : tourStep === 2 ? (
-            <Button onClick={() => setTourStep(3)}>Try the calculation</Button>
-          ) : null}
-          {tourStep === 3 && (
-            <section className="calm-exercise">
-              <dl>
-                <div>
-                  <dt>Evaporator outlet</dt>
-                  <dd>{v ? v.Teo.toFixed(1) + '°C' : '—'}</dd>
-                </div>
-                <div>
-                  <dt>Evaporator dew point</dt>
-                  <dd>{v ? v.Tevap.toFixed(1) + '°C' : '—'}</dd>
-                </div>
-                <div>
-                  <dt>Condenser outlet</dt>
-                  <dd>{v ? v.Tco.toFixed(1) + '°C' : '—'}</dd>
-                </div>
-                <div>
-                  <dt>Condenser bubble point</dt>
-                  <dd>{v ? v.Tbubble.toFixed(1) + '°C' : '—'}</dd>
-                </div>
-              </dl>
-              <label>
-                Superheat (K)
-                <Input
-                  type="number"
-                  value={answers.sh}
-                  onChange={(e) => {
-                    setAnswers({ ...answers, sh: e.target.value });
-                    setChecked(false);
-                  }}
-                />
-              </label>
-              <label>
-                Subcooling (K)
-                <Input
-                  type="number"
-                  value={answers.sc}
-                  onChange={(e) => {
-                    setAnswers({ ...answers, sc: e.target.value });
-                    setChecked(false);
-                  }}
-                />
-              </label>
-              <Button
-                disabled={!v || !answers.sh.trim() || !answers.sc.trim()}
-                onClick={() => setChecked(true)}
-              >
-                Check answers
-              </Button>
-              {checked && (
-                <p role="status">
-                  {v &&
-                  Math.abs(Number(answers.sh) - (v.Teo - v.Tevap)) < 0.11 &&
-                  Math.abs(Number(answers.sc) - (v.Tbubble - v.Tco)) < 0.11
-                    ? 'Correct. Both are 5 K in this teaching model.'
-                    : 'Subtract the dew point from the evaporator outlet for superheat, and the condenser outlet from the bubble point for subcooling.'}
-                </p>
-              )}
-              <Button variant="outline" onClick={closeTour}>
-                Finish practice
-              </Button>
-            </section>
+            />
+          </label>
+          <Button
+            disabled={!v || !answers.sh.trim() || !answers.sc.trim()}
+            onClick={() => setChecked(true)}
+          >
+            Check answers
+          </Button>
+          {checked && (
+            <p role="status">
+              {v &&
+              Math.abs(Number(answers.sh) - (v.Teo - v.Tevap)) < 0.11 &&
+              Math.abs(Number(answers.sc) - (v.Tbubble - v.Tco)) < 0.11
+                ? 'Correct. Both are 5 K in this teaching model.'
+                : 'Subtract the dew point from the evaporator outlet for superheat, and the condenser outlet from the bubble point for subcooling.'}
+            </p>
           )}
-          <button className="calm-text-button" onClick={closeTour}>
-            Return to Explore
-          </button>
+          <details>
+            <summary>Show formulas</summary>
+            <p>
+              Superheat = evaporator outlet − dew point.
+              <br />
+              Subcooling = bubble point − condenser outlet.
+            </p>
+          </details>
         </section>
       ) : (
         <>
@@ -843,8 +808,52 @@ export default function Home() {
       </button>
     </>
   );
+  const advanceTour = (next: number) => {
+    if (next > 6) {
+      closeTour();
+      return;
+    }
+    if (next === 1) {
+      if (tourStep === 0) reset();
+      setView('equipment');
+      setSheetOpen(false);
+    }
+    if (next === 2) {
+      setView('equipment');
+      setSheetOpen(false);
+    }
+    if (next === 3) {
+      setSheetOpen(true);
+    }
+    if (next === 4) {
+      setSheetOpen(false);
+    }
+    if (next === 5) {
+      setView('tubes');
+      setSheetOpen(false);
+    }
+    if (next === 6) {
+      setSheetOpen(true);
+      setChecked(false);
+    }
+    if (next === 0) setSheetOpen(true);
+    setTourStep(next);
+  };
+  const tourReady =
+    tourStep === 1
+      ? !!v
+      : tourStep === 2
+        ? selected === 'HP1'
+        : tourStep === 4
+          ? view === 'tubes'
+          : tourStep === 6
+            ? !!v &&
+              checked &&
+              Math.abs(Number(answers.sh) - (v.Teo - v.Tevap)) < 0.11 &&
+              Math.abs(Number(answers.sc) - (v.Tbubble - v.Tco)) < 0.11
+            : true;
   return (
-    <main className="calm">
+    <main className="calm" data-tour-active={tourStep !== null}>
       <header className="calm-header">
         <div className="calm-brand">
           <span>R</span>
@@ -943,7 +952,16 @@ export default function Home() {
               ))}
             </NativeSelect>
             <span className="calm-view-caption">
-              {tourStep === null ? 'Explore' : 'Guided practice'}
+              {tourStep === null ? (
+                <button
+                  className="calm-tutorial-entry"
+                  onClick={() => chooseMode(true)}
+                >
+                  Start tutorial
+                </button>
+              ) : (
+                'Guided practice'
+              )}
             </span>
           </div>
           <div
@@ -1020,6 +1038,15 @@ export default function Home() {
           )}
         </aside>
       </div>
+      {tourStep !== null && dialog === null && (
+        <GuidedTour
+          step={tourStep}
+          canAdvance={tourReady}
+          onNext={() => advanceTour(tourStep + 1)}
+          onBack={() => advanceTour(tourStep - 1)}
+          onClose={closeTour}
+        />
+      )}
       <Dialog
         open={dialog !== null}
         onOpenChange={(open) => {
