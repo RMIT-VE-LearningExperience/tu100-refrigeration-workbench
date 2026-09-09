@@ -40,3 +40,9 @@ Implemented persistent operation status and Run/Stop, valve undo, separate photo
 Added an optional Blender-built 3D component pilot: see `design/3d/README.md`. It is an illustrative inspection prototype, not the full measured unit and not connected to simulated valve operation. The original photograph remains the unit reference. Physical tube-to-photo mapping, verified pipe overlays, full-unit geometry, calibrated model changes and real tube videos remain future work requiring physical-unit evidence.
 
 Browser QA has now been performed on the local iteration: guided valid run, tube selection, photo selection without changing run state, deliberate valve operation, invalid-state explanation, undo, exercise feedback, desktop/mobile/tablet layouts and rendered 3D pilot. This supersedes the earlier first-build note that browser QA had not been done. Physical device performance, assistive-technology certification and instructor validation are still outstanding.
+
+## Simplified workspace
+
+The latest interface replaces the three-column control panel with a dominant equipment view and one contextual inspector. Labels default off. Component selection exposes just its valve control and related temperatures. Three compact pressure readings remain in the inspector; all readings, operating setup and model details open on demand. One view selector replaces the tab bar. A compact header holds status, Run/Stop and the secondary menu.
+
+First visit offers Explore freely or Guided practice. Guided steps appear inside the inspector, and calculation exercises appear only in that mode. Mobile uses a collapsible bottom inspector rather than stacked Configure/Inspect/Measure navigation. Circuit validity, undo, numerical model, offline assets and the optional 3D pilot are preserved.

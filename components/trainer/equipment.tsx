@@ -20,12 +20,14 @@ export function Equipment({
   selected,
   onSelect,
   hotspots,
+  onToggleHotspots,
   mode,
 }: {
   valves: Record<Valve, boolean>;
   selected: Valve | null;
   onSelect: (v: Valve) => void;
   hotspots: boolean;
+  onToggleHotspots: () => void;
   mode?: string;
 }) {
   const viewport = useRef<HTMLDivElement>(null);
@@ -74,7 +76,13 @@ export function Equipment({
   return (
     <>
       <div className="zoom-toolbar">
-        <span>Select a valve to inspect</span>
+        <Button
+          variant="ghost"
+          aria-pressed={hotspots}
+          onClick={onToggleHotspots}
+        >
+          Labels {hotspots ? 'on' : 'off'}
+        </Button>
         <div>
           <Button
             variant="ghost"
@@ -151,8 +159,9 @@ export function Equipment({
               src="/assets/trainer.jpg"
               alt="RMIT Imperial TU-100 refrigeration training unit"
             />
-            {hotspots &&
-              Object.entries(pins).map(([key, [x, y]]) => (
+            {Object.entries(pins)
+              .filter(([key]) => hotspots || key === selected)
+              .map(([key, [x, y]]) => (
                 <button
                   key={key}
                   className={
@@ -176,20 +185,24 @@ export function Equipment({
                   {key}
                 </button>
               ))}
-            <span className="coil-label top-coil">
-              {mode
-                ? mode === 'Cooling'
-                  ? 'EVAPORATOR'
-                  : 'CONDENSER'
-                : 'UPPER COIL'}
-            </span>
-            <span className="coil-label bottom-coil">
-              {mode
-                ? mode === 'Cooling'
-                  ? 'CONDENSER'
-                  : 'EVAPORATOR'
-                : 'LOWER COIL'}
-            </span>
+            {hotspots && (
+              <>
+                <span className="coil-label top-coil">
+                  {mode
+                    ? mode === 'Cooling'
+                      ? 'EVAPORATOR'
+                      : 'CONDENSER'
+                    : 'UPPER COIL'}
+                </span>
+                <span className="coil-label bottom-coil">
+                  {mode
+                    ? mode === 'Cooling'
+                      ? 'CONDENSER'
+                      : 'EVAPORATOR'
+                    : 'LOWER COIL'}
+                </span>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 'use client';
+import './calm.css';
 import { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import {
@@ -18,6 +19,12 @@ import {
 import { ModelPilot } from '@/components/trainer/model-pilot';
 import { Equipment } from '@/components/trainer/equipment';
 import { ObservationTubes } from '@/components/trainer/observation-tubes';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -384,41 +391,41 @@ export default function Home() {
     'equipment' | 'circuit' | 'cycle' | 'tubes' | 'model'
   >('equipment');
   const [selected, setSelected] = useState<Valve | null>(null);
-  const [hotspots, setHotspots] = useState(true);
-  const [learn, setLearn] = useState(false);
-  const [exercise, setExercise] = useState(false);
+  const [hotspots, setHotspots] = useState(false);
   const [answers, setAnswers] = useState({ sh: '', sc: '' });
   const [checked, setChecked] = useState(false);
   const [offline, setOffline] = useState('');
   const [tourStep, setTourStep] = useState<number | null>(null);
-  const [mobilePanel, setMobilePanel] = useState('inspect');
+  const [dialog, setDialog] = useState<
+    'welcome' | 'settings' | 'readings' | 'info' | null
+  >(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [undo, setUndo] = useState<ReturnType<typeof initialValves> | null>(
     null,
   );
   const closeTour = () => {
     setTourStep(null);
+    setSheetOpen(false);
+  };
+  const chooseMode = (guided: boolean) => {
+    setDialog(null);
+    setTourStep(guided ? 0 : null);
+    setSheetOpen(guided);
     try {
-      localStorage.setItem('tu100-guided-v2', 'seen');
+      localStorage.setItem('tu100-simple-welcome', 'seen');
     } catch {}
   };
   useEffect(() => {
     try {
-      if (localStorage.getItem('tu100-guided-v2') !== 'seen') setTourStep(0);
-    } catch {
-      setTourStep(0);
-    }
-  }, []);
-  useEffect(() => {
-    const bar = document.querySelector('.operation-bar');
-    if (!bar) return;
-    const observer = new ResizeObserver(() =>
-      document.documentElement.style.setProperty(
-        '--operation-height',
-        `${bar.getBoundingClientRect().height}px`,
-      ),
-    );
-    observer.observe(bar);
-    return () => observer.disconnect();
+      if (localStorage.getItem('tu100-simple-welcome') !== 'seen')
+        setDialog('welcome');
+    } catch {}
+    const query = matchMedia('(max-width: 760px)');
+    const update = () => setIsMobile(query.matches);
+    update();
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
   }, []);
   const t = ambient.trim() === '' ? NaN : Number(ambient);
   const model = simulate(r, t, valves, running),
@@ -582,66 +589,303 @@ export default function Home() {
         : model.status === 'range'
           ? 'Check ambient temperature'
           : 'Ready to run';
-  return (
-    <main className="shell">
-      <header className="topbar">
-        <div className="brand">
-          <span className="brand-mark" aria-hidden="true">
-            R
-          </span>
-          <div>
-            <strong>RMIT</strong>
-            <small>VIRTUAL LEARNING LAB</small>
-          </div>
+  const related = selected?.startsWith('LR')
+    ? ['Tco', 'Tlro']
+    : selected?.startsWith('AC')
+      ? ['Teo', 'Tsuc']
+      : selected === 'TXV' || selected === 'CTV'
+        ? ['Tco', 'Teo']
+        : ['Tdis', 'Teo'];
+  const selectValve = (key: Valve) => {
+    setSelected(key);
+    setSheetOpen(true);
+  };
+  const temperatureRows = (keys?: readonly string[]) => (
+    <div className="temperature-list">
+      {points
+        .filter(([key]) => !keys || keys.includes(key))
+        .map(([key, name, location, equation]) => (
+          <details key={key} className="temperature-row">
+            <summary>
+              <span>{name}</span>
+              <strong>
+                {v
+                  ? v[key] === null
+                    ? 'Bypassed'
+                    : v[key].toFixed(1) + '°C'
+                  : '—'}
+              </strong>
+            </summary>
+            <p>
+              {location}.<br />
+              <code>{equation}</code>
+            </p>
+          </details>
+        ))}
+    </div>
+  );
+  const inspector = (
+    <>
+      {tourStep !== null ? (
+        <section className="calm-guide">
+          <p className="calm-kicker">GUIDED PRACTICE · {tourStep + 1} / 4</p>
+          <h2>
+            {
+              [
+                'Set up the unit',
+                'Run the circuit',
+                'Observe the refrigerant',
+                'Calculate superheat',
+              ][tourStep]
+            }
+          </h2>
+          <p>
+            {
+              [
+                'Start with the R134a cooling configuration.',
+                'Press Run in the top bar to calculate the steady-state readings.',
+                'Compare the mixture at the evaporator inlet with liquid at the condenser outlet.',
+                'Use the temperatures below. Superheat and subcooling are temperature differences.',
+              ][tourStep]
+            }
+          </p>
+          {tourStep === 0 ? (
+            <Button
+              onClick={() => {
+                reset();
+                setView('equipment');
+                setTourStep(1);
+              }}
+            >
+              Load starting circuit
+            </Button>
+          ) : tourStep === 1 ? (
+            <Button
+              disabled={!v}
+              onClick={() => {
+                setView('tubes');
+                setTourStep(2);
+                setSheetOpen(false);
+              }}
+            >
+              Inspect the tubes
+            </Button>
+          ) : tourStep === 2 ? (
+            <Button onClick={() => setTourStep(3)}>Try the calculation</Button>
+          ) : null}
+          {tourStep === 3 && (
+            <section className="calm-exercise">
+              <dl>
+                <div>
+                  <dt>Evaporator outlet</dt>
+                  <dd>{v ? v.Teo.toFixed(1) + '°C' : '—'}</dd>
+                </div>
+                <div>
+                  <dt>Evaporator dew point</dt>
+                  <dd>{v ? v.Tevap.toFixed(1) + '°C' : '—'}</dd>
+                </div>
+                <div>
+                  <dt>Condenser outlet</dt>
+                  <dd>{v ? v.Tco.toFixed(1) + '°C' : '—'}</dd>
+                </div>
+                <div>
+                  <dt>Condenser bubble point</dt>
+                  <dd>{v ? v.Tbubble.toFixed(1) + '°C' : '—'}</dd>
+                </div>
+              </dl>
+              <label>
+                Superheat (K)
+                <Input
+                  type="number"
+                  value={answers.sh}
+                  onChange={(e) => {
+                    setAnswers({ ...answers, sh: e.target.value });
+                    setChecked(false);
+                  }}
+                />
+              </label>
+              <label>
+                Subcooling (K)
+                <Input
+                  type="number"
+                  value={answers.sc}
+                  onChange={(e) => {
+                    setAnswers({ ...answers, sc: e.target.value });
+                    setChecked(false);
+                  }}
+                />
+              </label>
+              <Button
+                disabled={!v || !answers.sh.trim() || !answers.sc.trim()}
+                onClick={() => setChecked(true)}
+              >
+                Check answers
+              </Button>
+              {checked && (
+                <p role="status">
+                  {v &&
+                  Math.abs(Number(answers.sh) - (v.Teo - v.Tevap)) < 0.11 &&
+                  Math.abs(Number(answers.sc) - (v.Tbubble - v.Tco)) < 0.11
+                    ? 'Correct. Both are 5 K in this teaching model.'
+                    : 'Subtract the dew point from the evaporator outlet for superheat, and the condenser outlet from the bubble point for subcooling.'}
+                </p>
+              )}
+              <Button variant="outline" onClick={closeTour}>
+                Finish practice
+              </Button>
+            </section>
+          )}
+          <button className="calm-text-button" onClick={closeTour}>
+            Return to Explore
+          </button>
+        </section>
+      ) : (
+        <>
+          <p className="calm-kicker">INSPECT THE UNIT</p>
+          <h2>{selected ? selected : 'Choose a component'}</h2>
+          <label className="sr-only" htmlFor="component">
+            Component
+          </label>
+          <NativeSelect
+            id="component"
+            value={selected ?? ''}
+            onChange={(e) => selectValve(e.target.value as Valve)}
+          >
+            <NativeSelectOption value="" disabled>
+              Select a valve…
+            </NativeSelectOption>
+            {groups.map((group) => (
+              <optgroup key={group.label} label={group.label}>
+                {group.keys.map((key) => (
+                  <NativeSelectOption key={key} value={key}>
+                    {key} · {VALVE_NAMES[key]}
+                  </NativeSelectOption>
+                ))}
+              </optgroup>
+            ))}
+          </NativeSelect>
+          {selected ? (
+            <div className="calm-component">
+              <p>{VALVE_NAMES[selected]}</p>
+              <div className="calm-valve-action">
+                <span className="calm-position">
+                  <i className={valves[selected] ? 'is-open' : ''} />
+                  {valves[selected] ? 'Open' : 'Closed'}
+                </span>
+                <Button variant="outline" onClick={() => changeValve(selected)}>
+                  {valves[selected] ? 'Close' : 'Open'} {selected}
+                </Button>
+              </div>
+              <p className="calm-small">
+                Operating a valve stops the simulation.
+              </p>
+              <p className="calm-kicker">RELATED MEASUREMENTS</p>
+              {temperatureRows(related)}
+            </div>
+          ) : (
+            <p className="calm-hint">
+              Select a valve here, or turn on Labels to find it on the
+              photograph.
+            </p>
+          )}
+        </>
+      )}
+      <section className="calm-pressures" aria-label="Pressure readings">
+        <div className="calm-section-heading">
+          <span>Pressures</span>
+          <small>kPa(g)</small>
         </div>
-        <span className="course">
-          UEERA0036 <span className="sep">/</span> Refrigeration
+        <div className="calm-pressure-row">
+          {[
+            ['Condenser', v?.Pdis],
+            ['Evaporator', v?.Pevap],
+            ['Suction', v?.Psuc],
+          ].map(([name, value]) => (
+            <div key={name as string}>
+              <span>{name}</span>
+              <strong>
+                {typeof value === 'number' ? value.toFixed(1) : '—'}
+              </strong>
+            </div>
+          ))}
+        </div>
+        <button
+          className="calm-text-button"
+          onClick={() => setDialog('readings')}
+        >
+          All readings <ArrowUpRight size={14} />
+        </button>
+      </section>
+      <button className="calm-setup-link" onClick={() => setDialog('settings')}>
+        <SlidersHorizontal size={16} />
+        <span>
+          <strong>Operating setup</strong>
+          <small>
+            {r} · {ambient || '—'}°C · {model.config?.mode ?? 'Custom circuit'}
+          </small>
         </span>
-        <div className="header-help">
+        <ChevronRight size={16} />
+      </button>
+    </>
+  );
+  return (
+    <main className="calm">
+      <header className="calm-header">
+        <div className="calm-brand">
+          <span>R</span>
+          <h1>
+            TU-100 <small>Digital twin</small>
+          </h1>
+        </div>
+        <div className="calm-header-actions">
+          <span className={'calm-status ' + (v ? 'running' : '')} role="status">
+            {model.status === 'invalid'
+              ? 'Check valves'
+              : model.status === 'range'
+                ? 'Check temperature'
+                : v
+                  ? 'Running'
+                  : 'Ready'}
+          </span>
           <Button
-            variant="ghost"
-            className="help-button"
-            onClick={() => {
-              setTourStep(0);
-              setMobilePanel('inspect');
-            }}
+            className="calm-run"
+            disabled={model.status === 'invalid' || model.status === 'range'}
+            onClick={() => setRunning(!running)}
           >
-            <BookOpen size={16} /> Tutorial
+            {running ? <Square size={14} /> : <Play size={14} />}{' '}
+            {running ? 'Stop' : 'Run'}
           </Button>
-          <Button
-            variant="ghost"
-            className="help-button"
-            onClick={() => setLearn(!learn)}
-            aria-expanded={learn}
-          >
-            <CircleHelp size={17} /> Learning guide
-          </Button>
+          <details className="calm-menu">
+            <summary aria-label="More options">•••</summary>
+            <div
+              onClick={(e) => {
+                const button = (e.target as HTMLElement).closest('button');
+                if (button)
+                  e.currentTarget.closest('details')?.removeAttribute('open');
+              }}
+            >
+              <button onClick={() => chooseMode(tourStep === null)}>
+                {tourStep === null ? 'Guided practice' : 'Explore freely'}
+              </button>
+              <button onClick={() => setDialog('settings')}>
+                Operating setup
+              </button>
+              <button onClick={reset}>Reset trainer</button>
+              <button onClick={() => setDialog('info')}>
+                About this model
+              </button>
+            </div>
+          </details>
         </div>
       </header>
-      <div className="operation-bar">
-        <div className="workbench-title">
-          <h1>
-            TU-100 <span>Digital twin</span>
-          </h1>
-          <span>Steady-state teaching model · Calibration pending</span>
-        </div>
-        <div className="operation-status" role="status">
-          <strong>{status}</strong>
+      {['invalid', 'range'].includes(model.status) && (
+        <div className="calm-error" role="alert">
           <span>
-            {model.status === 'invalid'
-              ? nearest.changes
-                  .map(
-                    (key) =>
-                      `${key}: set ${nearest.configuration.bits[VALVES.indexOf(key)] === '1' ? 'open' : 'closed'}`,
-                  )
-                  .join(' · ')
-              : model.status === 'range'
-                ? 'Ambient must be between 0 and 55°C.'
-                : model.config?.name}
+            {model.status === 'range'
+              ? 'Enter an ambient temperature from 0 to 55°C.'
+              : `To restore a valid circuit: ${nearest.changes.map((key) => `${key} ${nearest.configuration.bits[VALVES.indexOf(key)] === '1' ? 'open' : 'closed'}`).join(', ')}.`}
           </span>
-        </div>
-        <div className="heading-actions">
-          {undo && (
+          {undo ? (
             <Button
               variant="outline"
               onClick={() => {
@@ -653,307 +897,59 @@ export default function Home() {
             >
               Undo valve
             </Button>
-          )}
-          <Button variant="ghost" onClick={reset} aria-label="Reset trainer">
-            <RotateCcw size={18} />
-          </Button>
-          <Button
-            className={'run-button ' + (running ? 'stop' : '')}
-            disabled={model.status === 'invalid' || model.status === 'range'}
-            onClick={() => setRunning(!running)}
-          >
-            {running ? <Square size={14} /> : <Play size={14} />}{' '}
-            {running ? 'Stop simulation' : 'Run simulation'}
-          </Button>
-        </div>
-      </div>
-      {tourStep !== null && (
-        <section className="guided-task" aria-label="Guided first run">
-          <div>
-            <span className="eyebrow">
-              GUIDED FIRST RUN · {tourStep + 1} / 4
-            </span>
-            <h2>
-              {
-                [
-                  'Start with a working circuit',
-                  'Run the unit',
-                  'Inspect the refrigerant',
-                  'Explain a measurement',
-                ][tourStep]
-              }
-            </h2>
-            <p>
-              {
-                [
-                  'Load the R134a cooling preset. Then use the Run button above.',
-                  'Press Run simulation above. The measurements show the calculated steady state.',
-                  'Open Glass tubes and select Evaporator inlet. Compare its phase with the condenser outlet.',
-                  'Open the exercise to calculate superheat and subcooling from the displayed temperatures.',
-                ][tourStep]
-              }
-            </p>
-          </div>
-          <div className="guided-actions">
-            {tourStep === 0 ? (
-              <Button
-                onClick={() => {
-                  reset();
-                  setTourStep(1);
-                }}
-              >
-                Load starting circuit
-              </Button>
-            ) : tourStep === 1 ? (
-              <Button
-                disabled={!v}
-                onClick={() => {
-                  setView('tubes');
-                  setMobilePanel('inspect');
-                  setTourStep(2);
-                }}
-              >
-                Inspect the tubes
-              </Button>
-            ) : tourStep === 2 ? (
-              <Button
-                onClick={() => {
-                  setExercise(true);
-                  setMobilePanel('measure');
-                  setTourStep(3);
-                }}
-              >
-                Calculate superheat
-              </Button>
-            ) : (
-              <Button onClick={closeTour}>Finish guide</Button>
-            )}
-            <Button variant="ghost" onClick={closeTour}>
-              Skip guide
+          ) : (
+            <Button variant="outline" onClick={() => setDialog('settings')}>
+              Review setup
             </Button>
-          </div>
-        </section>
-      )}
-      <nav className="mobile-navigation" aria-label="Workbench panels">
-        {['configure', 'inspect', 'measure'].map((panel) => (
-          <Button
-            key={panel}
-            variant="ghost"
-            aria-pressed={mobilePanel === panel}
-            onClick={() => setMobilePanel(panel)}
-          >
-            {panel[0].toUpperCase() + panel.slice(1)}
-          </Button>
-        ))}
-      </nav>
-      {learn && (
-        <section className="guide">
-          <BookOpen size={21} />
-          <div>
-            <h2>From configuration to understanding</h2>
-            <ol>
-              <li>
-                Choose a preset, or open and close valves to assemble a valid
-                circuit.
-              </li>
-              <li>
-                Set ambient temperature and refrigerant. Press Run simulation.
-              </li>
-              <li>
-                Compare gauge pressures with saturation temperatures, then
-                calculate superheat and subcooling.
-              </li>
-              <li>
-                Use the cycle view to connect each measurement to a refrigerant
-                state.
-              </li>
-            </ol>
-            <p>
-              This steady-state emulator supports practical learning. Its
-              operating offsets are provisional; physical startup, faults,
-              fan-speed changes and AXV operation are not simulated.
-            </p>
-          </div>
-          <Button variant="ghost" onClick={() => setLearn(false)}>
-            Close
-          </Button>
-        </section>
-      )}
-      <div className="workbench" data-panel={mobilePanel}>
-        <aside className="controls">
-          <div className="panel-title">
-            <SlidersHorizontal size={16} />
-            <h2>Configure the unit</h2>
-          </div>
-          <label className="field-label" htmlFor="preset">
-            Start from a configuration
-          </label>
-          <NativeSelect
-            id="preset"
-            value={model.config?.id ?? ''}
-            onChange={(e) => selectConfig(e.target.value)}
-          >
-            <NativeSelectOption value="" disabled>
-              Custom · configuration incomplete
-            </NativeSelectOption>
-            {CONFIGURATIONS.map((c) => (
-              <NativeSelectOption key={c.id} value={c.id}>
-                {c.name}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
-          <div className="valve-heading">
-            <span>VALVE</span>
-            <span>POSITION</span>
-          </div>
-          {groups.map((g) => (
-            <section className="valve-group" key={g.label}>
-              <h3>{g.label}</h3>
-              {g.keys.map((key) => (
-                <Button
-                  key={key}
-                  variant="ghost"
-                  className={
-                    'valve-row ' + (selected === key ? 'selected' : '')
-                  }
-                  onClick={() => changeValve(key)}
-                  aria-pressed={valves[key]}
-                  aria-label={`${key} ${VALVE_NAMES[key]}, ${valves[key] ? 'open' : 'closed'}. Toggle valve.`}
-                >
-                  <span className="valve-id">{key}</span>
-                  <span className="valve-name">{VALVE_NAMES[key]}</span>
-                  <span
-                    className={
-                      'valve-state ' + (valves[key] ? 'open' : 'closed')
-                    }
-                  >
-                    <i />
-                    {valves[key] ? 'Open' : 'Closed'}
-                  </span>
-                </Button>
-              ))}
-            </section>
-          ))}
-          <div className="axv-row">
-            <span>AXV</span>
-            <span>Not simulated</span>
-          </div>
-          <p className="micro">
-            Changing a valve stops the simulation. Set the circuit, then press
-            Run.
-          </p>
-        </aside>
-        <section className="visual-workspace">
-          <div className="view-toolbar">
-            <div className="tabs" aria-label="Trainer views">
-              {(
-                ['equipment', 'circuit', 'cycle', 'tubes', 'model'] as const
-              ).map((tab) => (
-                <Button
-                  variant="ghost"
-                  key={tab}
-                  className={view === tab ? 'active' : ''}
-                  aria-pressed={view === tab}
-                  onClick={() => setView(tab)}
-                >
-                  {tab === 'equipment'
-                    ? 'Equipment'
-                    : tab === 'circuit'
-                      ? 'Circuit'
-                      : tab === 'tubes'
-                        ? 'Glass tubes'
-                        : tab === 'model'
-                          ? '3D pilot'
-                          : 'p–h cycle'}
-                </Button>
-              ))}
-            </div>
-            {view === 'equipment' && (
-              <Button
-                variant="ghost"
-                className="hotspot-toggle"
-                onClick={() => setHotspots(!hotspots)}
-                aria-pressed={hotspots}
-                aria-label="Show valve hotspots"
-              >
-                <Crosshair size={17} />
-              </Button>
-            )}
-          </div>
-          {selected && (
-            <div className="selection-bar">
-              <span>
-                <strong>{selected}</strong> · {VALVE_NAMES[selected]} ·{' '}
-                {valves[selected] ? 'Open' : 'Closed'}
-              </span>
-              <Button variant="outline" onClick={() => changeValve(selected)}>
-                {valves[selected] ? 'Close' : 'Open'} {selected}
-              </Button>
-            </div>
           )}
-          <div className="quick-readings" aria-label="Current pressures">
-            <span>
-              Condenser <strong>{v ? v.Pdis.toFixed(1) : '—'}</strong>
+        </div>
+      )}
+      <div className="calm-workspace">
+        <section className="calm-visual">
+          <div className="calm-viewbar">
+            <label className="sr-only" htmlFor="view">
+              View
+            </label>
+            <NativeSelect
+              id="view"
+              value={view}
+              onChange={(e) => setView(e.target.value as typeof view)}
+            >
+              {[
+                ['equipment', 'Equipment'],
+                ['tubes', 'Glass tubes'],
+                ['circuit', 'Circuit reference'],
+                ['cycle', 'p–h cycle'],
+                ['model', '3D pilot'],
+              ].map(([value, label]) => (
+                <NativeSelectOption key={value} value={value}>
+                  {label}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+            <span className="calm-view-caption">
+              {tourStep === null ? 'Explore' : 'Guided practice'}
             </span>
-            <span>
-              Evaporator <strong>{v ? v.Pevap.toFixed(1) : '—'}</strong>
-            </span>
-            <span>
-              Suction <strong>{v ? v.Psuc.toFixed(1) : '—'}</strong>
-            </span>
-            <small>kPa(g)</small>
           </div>
           <div
             className={
-              'visual-stage ' +
-              (view === 'cycle' ? 'chart-stage' : '') +
-              (view === 'tubes' ? ' tubes-stage' : '') +
-              (view === 'equipment' ? ' equipment-stage' : '')
+              'calm-stage ' + (view === 'equipment' ? 'is-equipment' : '')
             }
           >
             {view === 'equipment' ? (
               <Equipment
                 valves={valves}
                 selected={selected}
-                onSelect={setSelected}
+                onSelect={selectValve}
                 hotspots={hotspots}
+                onToggleHotspots={() => setHotspots(!hotspots)}
                 mode={model.config?.mode}
               />
-            ) : view === 'circuit' ? (
-              <div className="circuit-view">
-                <p className="eyebrow">PHYSICAL PIPEWORK REFERENCE</p>
-                <img
-                  src="/assets/circuit.png"
-                  alt="9001 TU-100 refrigeration circuit showing coils, HP1 to HP4 reversing valves, metering alternatives, receiver, accumulator and bypass valves"
-                />
-                <p className="micro">
-                  Original circuit drawing shows the cooling arrangement.{' '}
-                  {model.config?.mode === 'Heating'
-                    ? 'Your current valve pattern swaps the upper and lower coil roles.'
-                    : 'Use the valve panel to configure the circuit.'}
-                </p>
-                <div className="flow-summary">
-                  {model.config ? (
-                    <>
-                      Compressor <ChevronRight />{' '}
-                      {model.config.mode === 'Cooling' ? 'Lower' : 'Upper'} coil
-                      (condenser) <ChevronRight />{' '}
-                      {model.config.receiver ? 'Receiver → ' : ''}
-                      {model.config.meter} <ChevronRight />{' '}
-                      {model.config.mode === 'Cooling' ? 'Upper' : 'Lower'} coil
-                      (evaporator) <ChevronRight />{' '}
-                      {model.config.accumulator ? 'Accumulator → ' : ''} Suction
-                    </>
-                  ) : (
-                    'Complete a valid configuration to trace the selected flow path.'
-                  )}
-                </div>
-              </div>
-            ) : view === 'model' ? (
-              <ModelPilot />
             ) : view === 'tubes' ? (
               <ObservationTubes model={model} refrigerant={r} />
-            ) : (
+            ) : view === 'model' ? (
+              <ModelPilot />
+            ) : view === 'cycle' ? (
               <PHChart
                 r={r}
                 t={Number.isFinite(t) && t >= 0 && t <= 55 ? t : 25}
@@ -961,65 +957,138 @@ export default function Home() {
                 active={!!v}
                 values={v}
               />
+            ) : (
+              <div className="circuit-view">
+                <img
+                  src="/assets/circuit.png"
+                  alt="TU-100 cooling circuit reference with reversing valves, metering devices, receiver and accumulator"
+                />
+                <p className="micro">
+                  Cooling reference drawing.{' '}
+                  {model.config?.mode === 'Heating'
+                    ? 'Heating swaps the upper and lower coil roles.'
+                    : ''}
+                </p>
+                <div className="flow-summary">
+                  {model.config
+                    ? `Compressor → ${model.config.mode === 'Cooling' ? 'Lower' : 'Upper'} coil (condenser) → ${model.config.receiver ? 'Receiver → ' : ''}${model.config.meter} → ${model.config.mode === 'Cooling' ? 'Upper' : 'Lower'} coil (evaporator) → ${model.config.accumulator ? 'Accumulator → ' : ''}Suction`
+                    : 'Choose a valid circuit to trace its flow.'}
+                </div>
+              </div>
             )}
           </div>
         </section>
-        <aside className="readings">
-          {selected && (
-            <section className="component-inspector">
-              <p className="eyebrow">SELECTED VALVE</p>
-              <h2>
-                {selected} · {VALVE_NAMES[selected]}
-              </h2>
-              <p>
-                Position:{' '}
-                <strong>{valves[selected] ? 'Open' : 'Closed'}</strong>
-              </p>
-              <Button variant="outline" onClick={() => changeValve(selected)}>
-                {valves[selected] ? 'Close' : 'Open'} {selected}
-              </Button>
-              <p className="micro">Operating a valve stops the simulation.</p>
-            </section>
+        <aside className={'calm-inspector ' + (sheetOpen ? 'sheet-open' : '')}>
+          <button
+            className="calm-sheet-toggle"
+            aria-expanded={sheetOpen}
+            aria-controls="inspector-content"
+            onClick={() => setSheetOpen(!sheetOpen)}
+          >
+            <span>
+              {tourStep !== null
+                ? 'Guided practice'
+                : selected
+                  ? `${selected} · ${VALVE_NAMES[selected]}`
+                  : 'Inspect & measure'}
+            </span>
+            <span>
+              {sheetOpen ? 'Close' : 'Open'} {sheetOpen ? '⌄' : '⌃'}
+            </span>
+          </button>
+          {(!isMobile || sheetOpen) && (
+            <div id="inspector-content" className="calm-inspector-content">
+              {inspector}
+            </div>
           )}
-          <div className="panel-title">
-            <Thermometer size={17} />
-            <h2>Operating conditions</h2>
-          </div>
-          <div className="refrigerant-field">
-            <label className="field-label" htmlFor="refrigerant">
-              Refrigerant
-            </label>
-            <NativeSelect
-              id="refrigerant"
-              value={r}
-              onChange={(e) => {
-                setR(e.target.value as Refrigerant);
-                setChecked(false);
-              }}
-            >
-              {REFRIGERANTS.filter(
-                (f) => f !== 'R454C' || SETTINGS.enableR454C,
-              ).map((f) => (
-                <NativeSelectOption key={f}>{f}</NativeSelectOption>
-              ))}
-            </NativeSelect>
-          </div>
-          <p className="micro refrigerant-note">
-            {r === 'R134a'
-              ? 'Nameplate refrigerant · reference model'
-              : 'Simulated comparison · not a retrofit instruction'}
-          </p>
-          <div className="ambient-label">
-            <label className="field-label" htmlFor="ambient">
-              Ambient air
-            </label>
-            <div className="ambient-number">
+        </aside>
+      </div>
+      <Dialog
+        open={dialog !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            if (dialog === 'welcome') chooseMode(false);
+            else setDialog(null);
+          }
+        }}
+      >
+        <DialogContent
+          className={
+            'calm-dialog ' + (dialog === 'welcome' ? 'calm-welcome' : '')
+          }
+        >
+          <DialogTitle>
+            {dialog === 'welcome'
+              ? 'Explore the TU-100'
+              : dialog === 'settings'
+                ? 'Operating setup'
+                : dialog === 'readings'
+                  ? 'All readings'
+                  : 'About this model'}
+          </DialogTitle>
+          <DialogDescription>
+            {dialog === 'welcome'
+              ? 'Choose how you’d like to begin.'
+              : dialog === 'settings'
+                ? 'Configure the circuit and operating conditions.'
+                : dialog === 'readings'
+                  ? 'Calculated values for the current circuit. Select a temperature to see its explanation.'
+                  : 'A steady-state teaching emulator, not live sensor data.'}
+          </DialogDescription>
+          {dialog === 'welcome' ? (
+            <div className="calm-mode-choices">
+              <Button onClick={() => chooseMode(false)}>
+                Explore freely <ArrowUpRight size={16} />
+              </Button>
+              <Button variant="outline" onClick={() => chooseMode(true)}>
+                Guided practice
+              </Button>
+              <p>You can switch modes from the ••• menu.</p>
+            </div>
+          ) : dialog === 'settings' ? (
+            <div className="calm-settings">
+              <label htmlFor="preset">Configuration</label>
+              <NativeSelect
+                id="preset"
+                value={model.config?.id ?? ''}
+                onChange={(e) => selectConfig(e.target.value)}
+              >
+                <NativeSelectOption value="" disabled>
+                  Custom · check valves
+                </NativeSelectOption>
+                {CONFIGURATIONS.map((c) => (
+                  <NativeSelectOption key={c.id} value={c.id}>
+                    {c.name}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+              <label htmlFor="refrigerant">Refrigerant</label>
+              <NativeSelect
+                id="refrigerant"
+                value={r}
+                onChange={(e) => {
+                  setR(e.target.value as Refrigerant);
+                  setChecked(false);
+                }}
+              >
+                {REFRIGERANTS.filter(
+                  (f) => f !== 'R454C' || SETTINGS.enableR454C,
+                ).map((f) => (
+                  <NativeSelectOption key={f}>{f}</NativeSelectOption>
+                ))}
+              </NativeSelect>
+              <p>
+                {r === 'R134a'
+                  ? 'R134a is the refrigerant on the physical unit.'
+                  : 'Virtual comparison only; not a physical-unit retrofit.'}
+              </p>
+              <label htmlFor="ambient">Ambient air · °C</label>
               <Input
                 id="ambient"
                 type="number"
-                step="0.5"
                 min="0"
                 max="55"
+                step=".5"
                 value={ambient}
                 onChange={(e) => {
                   setAmbient(e.target.value);
@@ -1027,191 +1096,71 @@ export default function Home() {
                 }}
                 aria-invalid={model.status === 'range'}
               />
-              <span>°C</span>
+              {model.status === 'range' && (
+                <p role="alert">Enter a number from 0 to 55°C.</p>
+              )}
+              <Button onClick={() => setDialog(null)}>Done</Button>
             </div>
-          </div>
-          <input
-            aria-label="Ambient air temperature slider"
-            className="ambient-slider"
-            type="range"
-            min="0"
-            max="55"
-            step="0.5"
-            value={Number.isFinite(t) ? Math.min(55, Math.max(0, t)) : 0}
-            onChange={(e) => {
-              setAmbient(e.target.value);
-              setChecked(false);
-            }}
-          />
-          <div className="range-labels">
-            <span>0°C</span>
-            <span>55°C</span>
-          </div>
-          <div className="section-label">
-            <span>PRESSURE GAUGES</span>
-            <span>kPa gauge</span>
-          </div>
-          <div className="gauges">
-            <Gauge
-              name="Condenser"
-              symbol="Pdis"
-              value={v?.Pdis}
-              max={r === 'R134a' ? 2400 : r === 'R32' ? 5000 : 3500}
-            />
-            <Gauge
-              name="Evaporator"
-              symbol="Pevap"
-              value={v?.Pevap}
-              max={r === 'R32' ? 3000 : 1800}
-            />
-            <Gauge
-              name="Suction"
-              symbol="Psuc"
-              value={v?.Psuc}
-              max={r === 'R32' ? 3000 : 1800}
-              blue
-            />
-          </div>
-          <div className="section-label">
-            <span>TEMPERATURE READINGS</span>
-            <span>°C</span>
-          </div>
-          <div className="temperature-list">
-            {points.map(([key, name, location, equation]) => (
-              <details key={key} className="temperature-row">
-                <summary>
-                  <span>{name}</span>
-                  <strong>
-                    {v
-                      ? v[key] === null
-                        ? 'Bypassed'
-                        : v[key].toFixed(1)
-                      : '—'}
-                  </strong>
-                </summary>
-                <p>
-                  {location}.<br />
-                  <code>{equation}</code>
-                </p>
-              </details>
-            ))}
-          </div>
-          <div className="airflow">
-            <span>Coil airflow</span>
-            <span>Not validated</span>
-          </div>
-          <details className="model-note">
-            <summary>
-              <Info size={14} /> About these readings
-            </summary>
-            <p>
-              Calculated steady-state values, not live sensor readings. Coil TD
-              15 K; evaporator SH 5 K; suction SH 15 K; discharge SH 30 K;
-              condenser SC 5 K. Air splits and line offsets await calibration on
-              the unit.
-            </p>
-            <p>
-              R454C bubble temperature is obtained by inverting the
-              bubble-pressure curve at the condenser pressure. All gauge
-              readings use kPa(g).
-            </p>
-            <a
-              href="https://coolprop.org/coolprop/HighLevelAPI.html"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Property reference ↗
-            </a>
-          </details>
-          <section className="learning-strip">
-            <div>
-              <p className="eyebrow">PUT THE READINGS TO WORK</p>
-              <h2>Can you explain the operating conditions?</h2>
+          ) : dialog === 'readings' ? (
+            <>
+              <div className="gauges">
+                <Gauge
+                  name="Condenser"
+                  symbol="Pdis"
+                  value={v?.Pdis}
+                  max={r === 'R32' ? 5000 : 3500}
+                />
+                <Gauge
+                  name="Evaporator"
+                  symbol="Pevap"
+                  value={v?.Pevap}
+                  max={r === 'R32' ? 3000 : 1800}
+                />
+                <Gauge
+                  name="Suction"
+                  symbol="Psuc"
+                  value={v?.Psuc}
+                  max={r === 'R32' ? 3000 : 1800}
+                  blue
+                />
+              </div>
+              {temperatureRows()}
+            </>
+          ) : (
+            <div className="calm-about">
               <p>
-                Calculate superheat and subcooling from the same measurements
-                you would take in the workshop.
+                The model supports eight valve configurations. Its operating
+                offsets are provisional and require calibration against the RMIT
+                unit.
+              </p>
+              <p>
+                Startup, faults, fan-speed changes and AXV operation are not
+                simulated. The 3D pilot is illustrative geometry, not a measured
+                replica.
+              </p>
+              <details>
+                <summary>Model assumptions</summary>
+                <p>
+                  Coil TD 15 K; evaporator SH 5 K; suction SH 15 K; discharge SH
+                  30 K; condenser SC 5 K. Gauge readings use kPa(g). R454C uses
+                  separate dew and bubble curves.
+                </p>
+                <a
+                  href="https://coolprop.org/coolprop/HighLevelAPI.html"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Property reference ↗
+                </a>
+              </details>
+              <p>
+                {offline ||
+                  'Offline package prepares after loading the published app.'}
               </p>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => setExercise(!exercise)}
-              aria-expanded={exercise}
-            >
-              {exercise ? 'Close exercise' : 'Try an exercise'}
-              <ArrowUpRight size={15} />
-            </Button>
-          </section>
-          {exercise && (
-            <section className="exercise">
-              <div>
-                <h3>Measure. Calculate. Check.</h3>
-                <p>
-                  Evaporator dew temperature:{' '}
-                  <b>{v ? v.Tevap.toFixed(1) + '°C' : 'Run simulation'}</b>
-                  <br />
-                  Condenser bubble temperature:{' '}
-                  <b>{v ? v.Tbubble.toFixed(1) + '°C' : 'Run simulation'}</b>
-                </p>
-                <p>
-                  Evaporator outlet: {v ? `${v.Teo.toFixed(1)}°C` : '—'} ·
-                  Condenser outlet: {v ? `${v.Tco.toFixed(1)}°C` : '—'}
-                </p>
-              </div>
-              <label>
-                Evaporator superheat (K)
-                <Input
-                  type="number"
-                  step="0.1"
-                  value={answers.sh}
-                  onChange={(e) => {
-                    setAnswers({ ...answers, sh: e.target.value });
-                    setChecked(false);
-                  }}
-                />
-              </label>
-              <label>
-                Condenser subcooling (K)
-                <Input
-                  type="number"
-                  step="0.1"
-                  value={answers.sc}
-                  onChange={(e) => {
-                    setAnswers({ ...answers, sc: e.target.value });
-                    setChecked(false);
-                  }}
-                />
-              </label>
-              <Button
-                disabled={
-                  !v || answers.sh.trim() === '' || answers.sc.trim() === ''
-                }
-                onClick={() => setChecked(true)}
-              >
-                Check answers
-              </Button>
-              {checked && (
-                <p className="exercise-result" role="status">
-                  {v &&
-                  Math.abs(Number(answers.sh) - (v.Teo - v.Tevap)) < 0.11 &&
-                  Math.abs(Number(answers.sc) - (v.Tbubble - v.Tco)) < 0.11
-                    ? 'Correct. Both are 5 K in this fixed-offset teaching model.'
-                    : v &&
-                        Math.abs(Number(answers.sh) - (v.Teo - v.Tevap)) >= 0.11
-                      ? 'Check superheat: subtract evaporator dew temperature from evaporator outlet temperature.'
-                      : 'Check subcooling: subtract condenser outlet temperature from condenser bubble temperature.'}
-                </p>
-              )}
-            </section>
           )}
-        </aside>
-      </div>
-      <footer>
-        <span>RMIT · CoVE Learning & Teaching Innovation</span>
-        <span>
-          Steady-state prototype · Calibration pending
-          {offline ? ' · ' + offline : ''}
-        </span>
-      </footer>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

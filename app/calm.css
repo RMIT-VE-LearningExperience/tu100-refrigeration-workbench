@@ -1,0 +1,717 @@
+.calm {
+  min-height: 100dvh;
+  background: #f1f4ed;
+  color: #23392c;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.calm-header {
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  border-bottom: 1px solid #d7dfd1;
+  background: #fcfdf9;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+.calm-brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.calm-brand > span {
+  display: grid;
+  place-items: center;
+  background: #cf2d3c;
+  color: white;
+  font-weight: 800;
+  font-size: 22px;
+  width: 34px;
+  height: 34px;
+}
+.calm-brand h1 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.6px;
+  margin: 0;
+}
+.calm-brand h1 small {
+  font-size: 16px;
+  font-weight: 400;
+  margin-left: 6px;
+  color: #60705c;
+}
+.calm-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.calm-status {
+  font-size: 13px;
+  color: #64715e;
+}
+.calm-status.running {
+  color: #087253;
+}
+.calm-status::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 100%;
+  background: currentColor;
+  vertical-align: middle;
+  margin-right: 7px;
+}
+.calm-run {
+  min-width: 90px;
+  min-height: 42px;
+  font-size: 14px;
+}
+.calm-menu {
+  position: relative;
+}
+.calm-menu > summary {
+  cursor: pointer;
+  list-style: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  font-size: 18px;
+  letter-spacing: 2px;
+  border-radius: 5px;
+}
+.calm-menu > summary::-webkit-details-marker {
+  display: none;
+}
+.calm-menu > summary:hover {
+  background: #e9f0e2;
+}
+.calm-menu > div {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  background: #fff;
+  width: 220px;
+  padding: 6px;
+  box-shadow: 0 8px 28px #1d362524;
+  border: 1px solid #d7dfd1;
+  border-radius: 8px;
+}
+.calm-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 13px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.calm-menu button:hover {
+  background: #f0f4e9;
+}
+.calm-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  min-height: calc(100dvh - 72px);
+}
+.calm-visual {
+  min-width: 0;
+}
+.calm-viewbar {
+  height: 68px;
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.calm-viewbar > div {
+  width: 180px;
+}
+.calm-viewbar select {
+  border: 0;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: none;
+  height: 42px;
+}
+.calm-view-caption {
+  font-size: 12px;
+  color: #6b7864;
+}
+.calm-stage {
+  padding: 14px 32px 32px;
+  max-width: 1100px;
+  margin: auto;
+}
+.calm-stage.is-equipment {
+  max-width: none;
+  padding: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.calm .equipment-canvas {
+  height: calc(100dvh - 240px);
+  min-height: 420px;
+  max-height: none;
+  background: transparent;
+  border: 0;
+  order: 0;
+}
+.calm .equipment-surface {
+  padding: 0;
+  align-items: center;
+}
+.calm .equipment-photo {
+  box-shadow: 0 4px 20px #22362712;
+}
+.calm .zoom-toolbar {
+  order: 1;
+  align-self: center;
+  margin: 16px 0 0;
+  border: 1px solid #d7dfd1;
+  background: #fbfcf8;
+  border-radius: 7px;
+  gap: 18px;
+  padding: 2px 6px;
+  box-shadow: 0 2px 6px #1e332907;
+}
+.calm .zoom-toolbar button {
+  font-size: 12px;
+  min-height: 40px;
+  min-width: 38px;
+}
+.calm .zoom-toolbar output {
+  font-size: 11px;
+}
+.calm .photo-caption {
+  order: 2;
+  text-align: center;
+  font-size: 11px;
+  color: #687560;
+  padding: 12px;
+}
+.calm-inspector {
+  background: #fcfdf9;
+  border-left: 1px solid #d7dfd1;
+  min-width: 0;
+}
+.calm-inspector-content {
+  padding: 32px 26px;
+  position: sticky;
+  top: 72px;
+  max-height: calc(100dvh - 72px);
+  overflow: auto;
+}
+.calm-inspector h2 {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  margin: 10px 0 22px;
+}
+.calm-kicker {
+  font-size: 10px;
+  letter-spacing: 1.4px;
+  font-weight: 600;
+  color: #64755c;
+  margin: 0 0 12px;
+}
+.calm-inspector select {
+  height: 44px;
+  font-size: 13px;
+  background: #fff;
+}
+.calm-hint {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #61715a;
+  margin: 20px 0 50px;
+  max-width: 260px;
+}
+.calm-component > p:first-child {
+  font-size: 15px;
+  margin: 20px 0 12px;
+}
+.calm-valve-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.calm-valve-action button {
+  min-height: 42px;
+  font-size: 13px;
+}
+.calm-position {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 14px;
+}
+.calm-position i {
+  width: 7px;
+  height: 7px;
+  border-radius: 100%;
+  background: #889380;
+}
+.calm-position i.is-open {
+  background: #087253;
+}
+.calm-small {
+  font-size: 12px;
+  color: #697760;
+  line-height: 1.6;
+  margin: 12px 0 28px;
+}
+.calm .temperature-row summary {
+  font-size: 13px;
+  min-height: 46px;
+}
+.calm .temperature-row summary strong {
+  font-size: 14px;
+}
+.calm .temperature-row p {
+  font-size: 12px;
+  color: #56664e;
+  line-height: 1.7;
+}
+.calm .temperature-list {
+  display: block;
+}
+.calm-pressures {
+  border-top: 1px solid #dce4d5;
+  padding-top: 22px;
+  margin-top: 28px;
+}
+.calm-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13px;
+  color: #51644a;
+}
+.calm-section-heading small {
+  font-size: 10px;
+}
+.calm-pressure-row {
+  display: flex;
+  gap: 14px;
+  margin: 18px 0 10px;
+}
+.calm-pressure-row > div {
+  flex: 1;
+  min-width: 0;
+}
+.calm-pressure-row span {
+  font-size: 11px;
+  color: #65755c;
+  display: block;
+}
+.calm-pressure-row strong {
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.4px;
+  margin-top: 6px;
+  display: block;
+  font-variant-numeric: tabular-nums;
+}
+.calm-text-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #38674a;
+  cursor: pointer;
+  min-height: 42px;
+  padding: 0;
+}
+.calm-text-button:hover {
+  text-decoration: underline;
+}
+.calm-setup-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border-top: 1px solid #dce4d5;
+  margin-top: 26px;
+  padding-top: 20px;
+  text-align: left;
+  cursor: pointer;
+  color: #52664b;
+}
+.calm-setup-link > span {
+  flex: 1;
+}
+.calm-setup-link strong {
+  display: block;
+  font-weight: 500;
+  font-size: 13px;
+}
+.calm-setup-link small {
+  display: block;
+  font-size: 11px;
+  color: #76816d;
+  margin-top: 5px;
+}
+.calm-sheet-toggle {
+  display: none;
+}
+.calm-error {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: #f9eee1;
+  padding: 12px 28px;
+  font-size: 13px;
+  color: #6c4323;
+  border-bottom: 1px solid #e6cdb3;
+}
+.calm-error button {
+  flex-shrink: 0;
+  font-size: 12px;
+  min-height: 40px;
+}
+.calm-dialog {
+  background: #fcfdf9 !important;
+  color: #23392c !important;
+  max-width: 540px !important;
+  max-height: 85dvh;
+  overflow: auto;
+  padding: 30px !important;
+  gap: 20px !important;
+}
+.calm-dialog [data-slot='dialog-title'] {
+  font-size: 25px;
+  line-height: 1.2;
+  letter-spacing: -0.6px;
+  font-weight: 500;
+  padding-right: 20px;
+}
+.calm-dialog [data-slot='dialog-description'] {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #60705b;
+}
+.calm-dialog button {
+  min-height: 42px;
+}
+.calm-dialog .temperature-row summary {
+  font-size: 14px;
+  min-height: 46px;
+}
+.calm-dialog .temperature-row p {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.calm-dialog .temperature-list {
+  display: block;
+}
+.calm-dialog .gauges {
+  gap: 24px;
+}
+.calm-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.calm-settings label {
+  font-size: 14px;
+  margin-top: 6px;
+}
+.calm-settings input,
+.calm-settings select {
+  height: 44px;
+  font-size: 14px;
+}
+.calm-settings p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #69775f;
+  margin: 0;
+}
+.calm-mode-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.calm-mode-choices button {
+  min-height: 48px;
+  justify-content: space-between;
+  font-size: 14px;
+}
+.calm-mode-choices p {
+  font-size: 12px;
+  color: #708167;
+  margin: 8px 0 0;
+}
+.calm-about {
+  font-size: 14px;
+  line-height: 1.7;
+}
+.calm-about p {
+  margin: 0 0 18px;
+}
+.calm-about summary {
+  cursor: pointer;
+  min-height: 42px;
+}
+.calm-guide > p:not(.calm-kicker) {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #61715a;
+  margin: 0 0 22px;
+}
+.calm-guide > button {
+  min-height: 44px;
+  font-size: 13px;
+}
+.calm-guide h2 {
+  margin-bottom: 16px;
+}
+.calm-exercise {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.calm-exercise dl {
+  font-size: 12px;
+}
+.calm-exercise dl > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #dce4d5;
+}
+.calm-exercise label {
+  font-size: 13px;
+}
+.calm-exercise input {
+  margin-top: 8px;
+  min-height: 44px;
+}
+.calm-exercise > p {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.calm .ph-chart {
+  max-width: 800px;
+  margin: auto;
+}
+.calm .observation-view {
+  max-width: 760px;
+  margin: auto;
+}
+.calm .model-pilot {
+  max-width: 850px;
+  margin: auto;
+}
+.calm .tube-footnote {
+  margin-top: 20px;
+}
+.calm .chart-title > span {
+  font-size: 12px;
+}
+.calm .circuit-view {
+  max-width: 850px;
+  margin: auto;
+}
+.calm button:focus-visible,
+.calm summary:focus-visible {
+  outline: 3px solid #087253;
+  outline-offset: 3px;
+}
+@media (min-width: 1500px) {
+  .calm-workspace {
+    grid-template-columns: minmax(0, 1fr) 380px;
+  }
+  .calm-inspector-content {
+    padding: 40px 32px;
+  }
+  .calm .equipment-canvas {
+    height: calc(100dvh - 240px);
+  }
+}
+@media (max-width: 1000px) and (min-width: 761px) {
+  .calm-workspace {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+  .calm-inspector-content {
+    padding: 26px 20px;
+  }
+  .calm-stage {
+    padding: 14px 18px;
+  }
+  .calm-viewbar {
+    padding: 0 20px;
+  }
+  .calm-header {
+    padding: 0 20px;
+  }
+}
+@media (max-width: 760px) {
+  .calm-header {
+    height: 64px;
+    padding: 0 16px;
+  }
+  .calm-brand {
+    gap: 9px;
+  }
+  .calm-brand > span {
+    width: 27px;
+    height: 27px;
+    font-size: 18px;
+  }
+  .calm-brand h1 {
+    font-size: 18px;
+  }
+  .calm-brand h1 small {
+    display: none;
+  }
+  .calm-header-actions {
+    gap: 10px;
+  }
+  .calm-status {
+    font-size: 11px;
+  }
+  .calm-run {
+    min-width: 66px;
+    min-height: 40px;
+    font-size: 12px;
+  }
+  .calm-menu > summary {
+    width: 30px;
+  }
+  .calm-workspace {
+    display: block;
+    min-height: calc(100dvh - 64px);
+    padding-bottom: 70px;
+  }
+  .calm-viewbar {
+    height: 56px;
+    padding: 0 16px;
+  }
+  .calm-viewbar > div {
+    width: 165px;
+  }
+  .calm-viewbar select {
+    font-size: 13px;
+  }
+  .calm-view-caption {
+    font-size: 11px;
+  }
+  .calm .equipment-canvas {
+    height: calc(100svh - 270px);
+    min-height: 280px;
+  }
+  .calm .zoom-toolbar {
+    margin-top: 14px;
+    gap: 12px;
+  }
+  .calm .photo-caption {
+    font-size: 10px;
+  }
+  .calm-stage {
+    padding: 8px 16px 20px;
+  }
+  .calm-inspector {
+    position: fixed;
+    z-index: 35;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border: 1px solid #d0dcc8;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -5px 20px #1b332b0a;
+    background: #fcfdf9;
+  }
+  .calm-sheet-toggle {
+    display: flex;
+    width: 100%;
+    min-height: 64px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 0 20px;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+  }
+  .calm-sheet-toggle > span:last-child {
+    font-size: 12px;
+    color: #607658;
+    flex-shrink: 0;
+  }
+  .calm-inspector-content {
+    position: static;
+    max-height: 65dvh;
+    overflow: auto;
+    padding: 12px 24px 30px;
+  }
+  .calm-hint {
+    margin-bottom: 24px;
+    max-width: none;
+  }
+  .calm-inspector h2 {
+    font-size: 21px;
+    margin-bottom: 18px;
+  }
+  .calm-pressures {
+    margin-top: 22px;
+    padding-top: 18px;
+  }
+  .calm-pressure-row strong {
+    font-size: 23px;
+  }
+  .calm-setup-link {
+    margin-top: 18px;
+  }
+  .calm-error {
+    padding: 10px 16px;
+    font-size: 12px;
+    align-items: flex-start;
+  }
+  .calm-dialog {
+    padding: 26px !important;
+    max-height: 82dvh;
+  }
+  .calm-dialog .gauges {
+    gap: 8px;
+  }
+  .calm-dialog .gauge strong {
+    font-size: 20px;
+  }
+  .calm .model-controls {
+    gap: 0;
+  }
+  .calm .model-controls button {
+    font-size: 12px;
+  }
+  .calm .tube-heading > strong {
+    font-size: 12px;
+  }
+  .calm .observation-heading h3 {
+    font-size: 21px;
+  }
+  .calm .observation-note {
+    font-size: 12px;
+  }
+  .calm .tube-selector button {
+    font-size: 12px;
+  }
+  .calm .ph-chart svg {
+    min-height: 220px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .calm * {
+    scroll-behavior: auto !important;
+  }
+}
