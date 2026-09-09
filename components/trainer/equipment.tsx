@@ -1,7 +1,8 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { type Valve } from '@/lib/model';
+import { clusterMarkers } from '@/lib/markers';
+import { VALVE_NAMES, type Valve } from '@/lib/model';
 const pins: Partial<Record<Valve, [number, number]>> = {
   CTV: [61.8, 28.7],
   TXV: [85.5, 28.7],
@@ -22,6 +23,8 @@ export function Equipment({
   hotspots,
   onToggleHotspots,
   mode,
+  focusRequest,
+  inspected,
 }: {
   valves: Record<Valve, boolean>;
   selected: Valve | null;
@@ -29,6 +32,8 @@ export function Equipment({
   hotspots: boolean;
   onToggleHotspots: () => void;
   mode?: string;
+  focusRequest: number;
+  inspected: boolean;
 }) {
   const viewport = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
@@ -52,29 +57,57 @@ export function Equipment({
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-  function scale(next: number) {
+  function scale(next: number, target?: [number, number], focusId?: string) {
     const el = viewport.current;
     if (!el) return;
-    const point = selected && pins[selected];
+    const oldWidth = fit.width * zoom,
+      oldHeight = fit.height * zoom;
+    const point = target || (selected && pins[selected]);
     const cx = point
       ? point[0] / 100
-      : (el.scrollLeft + el.clientWidth / 2) /
-        Math.max(fit.width * zoom, el.clientWidth);
+      : (el.scrollLeft +
+          el.clientWidth / 2 -
+          Math.max(0, (el.clientWidth - oldWidth) / 2)) /
+        oldWidth;
     const cy = point
       ? point[1] / 100
-      : (el.scrollTop + el.clientHeight / 2) /
-        Math.max(fit.height * zoom, el.clientHeight);
+      : (el.scrollTop +
+          el.clientHeight / 2 -
+          Math.max(0, (el.clientHeight - oldHeight) / 2)) /
+        oldHeight;
     setZoom(next);
-    requestAnimationFrame(() =>
+    requestAnimationFrame(() => {
       el.scrollTo({
-        left: cx * fit.width * next - el.clientWidth / 2,
-        top: cy * fit.height * next - el.clientHeight / 2,
+        left:
+          Math.max(0, (el.clientWidth - fit.width * next) / 2) +
+          cx * fit.width * next -
+          el.clientWidth / 2,
+        top:
+          Math.max(0, (el.clientHeight - fit.height * next) / 2) +
+          cy * fit.height * next -
+          el.clientHeight / 2,
         behavior: 'instant',
-      }),
-    );
+      });
+      if (focusId)
+        el.querySelector<HTMLButtonElement>(`[data-valve="${focusId}"]`)?.focus(
+          { preventScroll: true },
+        );
+    });
   }
+  useEffect(() => {
+    if (focusRequest && selected && pins[selected]) scale(3, pins[selected]);
+  }, [focusRequest]);
+  const targets = Object.entries(pins)
+    .filter(([id]) => hotspots || id.startsWith('HP') || id === selected)
+    .map(([id, [x, y]]) => ({ id, x, y }));
+  const clusters = clusterMarkers(targets, fit.width * zoom, fit.height * zoom);
   return (
     <>
+      {!inspected && (
+        <p className="equipment-instruction">
+          Select a marked component to inspect it.
+        </p>
+      )}
       <div className="zoom-toolbar">
         <Button
           variant="ghost"
@@ -95,8 +128,8 @@ export function Equipment({
           <output aria-live="polite">{Math.round(zoom * 100)}%</output>
           <Button
             variant="ghost"
-            disabled={zoom >= 3}
-            onClick={() => scale(Math.min(3, zoom + 0.5))}
+            disabled={zoom >= 6}
+            onClick={() => scale(Math.min(6, zoom + 0.5))}
             aria-label="Zoom in"
           >
             +
@@ -159,32 +192,60 @@ export function Equipment({
               src="/assets/trainer.jpg"
               alt="RMIT Imperial TU-100 refrigeration training unit"
             />
-            {Object.entries(pins)
-              .filter(([key]) => hotspots || key === selected)
-              .map(([key, [x, y]]) => (
+            {clusters.map((group) =>
+              group.members.length > 1 ? (
                 <button
-                  key={key}
+                  key={group.members.map((p) => p.id).join('-')}
                   className={
-                    'pin ' +
-                    (valves[key as Valve] ? 'open ' : '') +
-                    (selected === key ? 'selected' : '')
+                    'component-marker marker-group ' +
+                    (group.members.some((p) => p.id === selected)
+                      ? 'is-selected'
+                      : '')
                   }
-                  style={{
-                    left: `${x}%`,
-                    top: `${y}%`,
-                    ...(key === 'LRI'
-                      ? { transform: 'translate(-100%, -50%)' }
-                      : key === 'LRK'
-                        ? { transform: 'translate(0, -50%)' }
-                        : {}),
-                  }}
-                  onClick={() => onSelect(key as Valve)}
-                  aria-label={`Inspect ${key}, ${valves[key as Valve] ? 'open' : 'closed'}`}
-                  aria-pressed={selected === key}
+                  style={{ left: `${group.x}%`, top: `${group.y}%` }}
+                  aria-label={`Zoom to ${group.members.map((p) => p.id).join(', ')}`}
+                  onClick={() =>
+                    scale(
+                      Math.min(6, zoom + 1),
+                      [group.x, group.y],
+                      group.members[0].id,
+                    )
+                  }
                 >
-                  {key}
+                  <span className="marker-dot">{group.members.length}</span>
+                  <span className="marker-caption">
+                    {group.members.every((p) => p.id.startsWith('HP'))
+                      ? 'Reversing valves'
+                      : 'Valve group'}
+                  </span>
+                  <span className="marker-tooltip">
+                    Zoom in to select a valve
+                  </span>
                 </button>
-              ))}
+              ) : (
+                group.members.map(({ id, x, y }) => (
+                  <button
+                    key={id}
+                    data-valve={id}
+                    className={
+                      'component-marker ' +
+                      (selected === id ? 'is-selected ' : '') +
+                      (hotspots ? 'show-label' : '')
+                    }
+                    style={{ left: `${x}%`, top: `${y}%` }}
+                    onClick={() => onSelect(id as Valve)}
+                    aria-label={`Inspect ${id}, ${valves[id as Valve] ? 'open' : 'closed'}`}
+                    aria-pressed={selected === id}
+                  >
+                    <span className="marker-dot" />
+                    <span className="marker-caption">{id}</span>
+                    <span className="marker-tooltip">
+                      {id} · {VALVE_NAMES[id as Valve]}
+                    </span>
+                  </button>
+                ))
+              ),
+            )}
             {hotspots && (
               <>
                 <span className="coil-label top-coil">

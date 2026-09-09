@@ -46,3 +46,9 @@ Browser QA has now been performed on the local iteration: guided valid run, tube
 The latest interface replaces the three-column control panel with a dominant equipment view and one contextual inspector. Labels default off. Component selection exposes just its valve control and related temperatures. Three compact pressure readings remain in the inspector; all readings, operating setup and model details open on demand. One view selector replaces the tab bar. A compact header holds status, Run/Stop and the secondary menu.
 
 First visit offers Explore freely or Guided practice. Guided steps appear inside the inspector, and calculation exercises appear only in that mode. Mobile uses a collapsible bottom inspector rather than stacked Configure/Inspect/Measure navigation. Circuit validity, undo, numerical model, offline assets and the optional 3D pilot are preserved.
+
+## Interactive photo affordances
+
+The reversing valves now have visible markers by default. Crowded 44px targets form a group marker that zooms into the area, then reveals individually selectable valves. Hover and keyboard focus reveal names; selection highlights the component without changing valve state. The first-use image instruction disappears after a successful component selection. The inspector offers Zoom to component for mapped valves, while Fit restores the whole unit. Labels reveals the remaining mapped valves; the component list remains available for all valves, including the unmapped LRB. Photo markers for observation tubes remain deferred until their positions are verified.
+
+Browser checks cover desktop/mobile appearance, group expansion, keyboard focus transfer, selection without stopping the simulation, and component zoom. Marker grouping tests cover whole-unit and enlarged scales and target preservation.

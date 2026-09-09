@@ -391,6 +391,8 @@ export default function Home() {
     'equipment' | 'circuit' | 'cycle' | 'tubes' | 'model'
   >('equipment');
   const [selected, setSelected] = useState<Valve | null>(null);
+  const [focusRequest, setFocusRequest] = useState(0);
+  const [inspected, setInspected] = useState(false);
   const [hotspots, setHotspots] = useState(false);
   const [answers, setAnswers] = useState({ sh: '', sc: '' });
   const [checked, setChecked] = useState(false);
@@ -597,6 +599,7 @@ export default function Home() {
         ? ['Tco', 'Teo']
         : ['Tdis', 'Teo'];
   const selectValve = (key: Valve) => {
+    setInspected(true);
     setSelected(key);
     setSheetOpen(true);
   };
@@ -776,6 +779,18 @@ export default function Home() {
                   {valves[selected] ? 'Close' : 'Open'} {selected}
                 </Button>
               </div>
+              {selected !== 'LRB' && (
+                <button
+                  className="calm-text-button"
+                  onClick={() => {
+                    setView('equipment');
+                    setFocusRequest((n) => n + 1);
+                    setSheetOpen(false);
+                  }}
+                >
+                  Zoom to component <ArrowUpRight size={14} />
+                </button>
+              )}
               <p className="calm-small">
                 Operating a valve stops the simulation.
               </p>
@@ -784,8 +799,8 @@ export default function Home() {
             </div>
           ) : (
             <p className="calm-hint">
-              Select a valve here, or turn on Labels to find it on the
-              photograph.
+              Select a marker on the photograph, or choose a valve here. Group
+              markers zoom in to reveal individual valves.
             </p>
           )}
         </>
@@ -938,6 +953,8 @@ export default function Home() {
           >
             {view === 'equipment' ? (
               <Equipment
+                focusRequest={focusRequest}
+                inspected={inspected}
                 valves={valves}
                 selected={selected}
                 onSelect={selectValve}
