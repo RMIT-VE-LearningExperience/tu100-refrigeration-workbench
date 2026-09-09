@@ -60,3 +60,14 @@ Start tutorial launches a seven-step walkthrough anchored to the real setup, Run
 Browser checks completed the seven-step flow on desktop and at 390 × 844, including actual valve selection, view changes, answers and completion. The tutorial does not change the physical-model equations or claim real gas-flow measurement.
 
 The final tutorial step now highlights the complete exercise, including its input fields and Check answers button. Inputs have explicit white backgrounds and each shows its numerical subtraction as a visible hint. Spotlight bounds respect scrolling containers, keeping the visible exercise bright on mobile. Verified correct-answer completion on desktop/mobile.
+
+
+## Student activities (September 2026)
+
+The default Learn workspace replaces the seven-step spotlight and welcome dialog. Its four-question cycle activity links the actual photo, component close-up, simplified cycle, phase/direction explanation and model readings through one selection. The first task identifies heat absorption. Feedback and the next action stay beside the question; mobile progression focuses and reveals the next question. Explore retains the complete equipment controls, tube illustration, circuit reference, p–h chart and optional 3D pilot.
+
+Superheat and subcooling are independent activities in the Activity selector, with a visual temperature gap, one answer at a time, inline recovery and an optional worked example. They use the same fixed R134a/25°C cooling example. No equations, property data or supported valve patterns were changed. The phase indicator shows illustrative direction, not measured flow speed. The four main photo locations are visually identified; tube/pipe overlays remain deferred pending verification.
+
+Cycle progress, activity selection and typed practice answers are stored locally on the device. A memory fallback retains progress during the page session if storage is unavailable. Returning to Learn does not silently operate the unit: a stopped or changed model displays Resume/Restore beside the task. Explore, restart and previous-question actions remain available. The old tutorial components and spotlight styling were removed.
+
+Validation: 14 model/marker/observation/learning tests pass. Browser checks cover wrong/correct selections, Stop/change-selection/Resume, photo close-up, four-question completion, independent calculations including the reported 64 K error and worked-example recovery, and mobile question focus/reflow. Instructor review and a representative student trial remain outstanding.

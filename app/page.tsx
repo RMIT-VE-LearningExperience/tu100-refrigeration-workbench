@@ -1,21 +1,16 @@
 'use client';
 import './calm.css';
-import { GuidedTour } from '@/components/trainer/guided-tour';
+import './learn.css';
+import { LearningWorkspace } from '@/components/trainer/learning-workspace';
 import { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import {
   Play,
   Square,
-  RotateCcw,
   ArrowUpRight,
-  Thermometer,
   Info,
-  Check,
   SlidersHorizontal,
-  CircleHelp,
   ChevronRight,
-  Crosshair,
-  BookOpen,
 } from 'lucide-react';
 import { ModelPilot } from '@/components/trainer/model-pilot';
 import { Equipment } from '@/components/trainer/equipment';
@@ -395,46 +390,22 @@ export default function Home() {
   const [focusRequest, setFocusRequest] = useState(0);
   const [inspected, setInspected] = useState(false);
   const [hotspots, setHotspots] = useState(false);
-  const [answers, setAnswers] = useState({ sh: '', sc: '' });
-  const [checked, setChecked] = useState(false);
   const [offline, setOffline] = useState('');
-  const [tourStep, setTourStep] = useState<number | null>(null);
-  const [dialog, setDialog] = useState<
-    'welcome' | 'settings' | 'readings' | 'info' | null
-  >(null);
+  const [surface, setSurface] = useState<'learn' | 'explore'>('learn');
+  const [dialog, setDialog] = useState<'settings' | 'readings' | 'info' | null>(
+    null,
+  );
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [undo, setUndo] = useState<ReturnType<typeof initialValves> | null>(
     null,
   );
-  const closeTour = () => {
-    setTourStep(null);
-    setSheetOpen(false);
-    requestAnimationFrame(() =>
-      document
-        .querySelector<HTMLButtonElement>('.calm-tutorial-entry')
-        ?.focus({ preventScroll: true }),
-    );
-  };
   const chooseMode = (guided: boolean) => {
+    setSurface(guided ? 'learn' : 'explore');
     setDialog(null);
-    setTourStep(guided ? 0 : null);
-    setSheetOpen(guided);
-    if (guided) {
-      setView('equipment');
-      setSelected(null);
-      setHotspots(false);
-      setFocusRequest(0);
-    }
-    try {
-      localStorage.setItem('tu100-simple-welcome', 'seen');
-    } catch {}
+    setSheetOpen(false);
   };
   useEffect(() => {
-    try {
-      if (localStorage.getItem('tu100-simple-welcome') !== 'seen')
-        setDialog('welcome');
-    } catch {}
     const query = matchMedia('(max-width: 760px)');
     const update = () => setIsMobile(query.matches);
     update();
@@ -452,7 +423,6 @@ export default function Home() {
     setValves((old) => ({ ...old, [key]: !old[key] }));
     setSelected(key);
     setRunning(false);
-    setChecked(false);
   };
   const selectConfig = (id: string) => {
     const c = CONFIGURATIONS.find((c) => c.id === id);
@@ -460,7 +430,6 @@ export default function Home() {
       setUndo(null);
       setValves(statesFromBits(c.bits));
       setRunning(false);
-      setChecked(false);
     }
   };
   const reset = () => {
@@ -470,8 +439,6 @@ export default function Home() {
     setAmbient('25');
     setRunning(false);
     setSelected(null);
-    setChecked(false);
-    setAnswers({ sh: '', sc: '' });
   };
   useEffect(() => {
     if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production')
@@ -595,14 +562,6 @@ export default function Home() {
     }
     return () => lifecycle.abort();
   }, []);
-  const status =
-    model.status === 'running'
-      ? 'Simulation running'
-      : model.status === 'invalid'
-        ? 'Check valve configuration'
-        : model.status === 'range'
-          ? 'Check ambient temperature'
-          : 'Ready to run';
   const related = selected?.startsWith('LR')
     ? ['Tco', 'Tlro']
     : selected?.startsWith('AC')
@@ -613,7 +572,7 @@ export default function Home() {
   const selectValve = (key: Valve) => {
     setInspected(true);
     setSelected(key);
-    setSheetOpen(tourStep === 2 ? false : true);
+    setSheetOpen(true);
   };
   const temperatureRows = (keys?: readonly string[]) => (
     <div className="temperature-list">
@@ -641,150 +600,62 @@ export default function Home() {
   );
   const inspector = (
     <>
-      {tourStep === 6 ? (
-        <section className="calm-exercise">
-          <dl>
-            <div>
-              <dt>Evaporator outlet</dt>
-              <dd>{v ? v.Teo.toFixed(1) + '°C' : '—'}</dd>
-            </div>
-            <div>
-              <dt>Evaporator dew point</dt>
-              <dd>{v ? v.Tevap.toFixed(1) + '°C' : '—'}</dd>
-            </div>
-            <div>
-              <dt>Condenser outlet</dt>
-              <dd>{v ? v.Tco.toFixed(1) + '°C' : '—'}</dd>
-            </div>
-            <div>
-              <dt>Condenser bubble point</dt>
-              <dd>{v ? v.Tbubble.toFixed(1) + '°C' : '—'}</dd>
-            </div>
-          </dl>
-          <label>
-            Superheat (K)
-            <span className="exercise-subtraction" id="superheat-hint">
-              {v
-                ? `${v.Teo.toFixed(1)} − ${v.Tevap.toFixed(1)} = ? K`
-                : 'Run the simulation to calculate.'}
-            </span>
-            <Input
-              aria-label="Superheat (K)"
-              aria-describedby="superheat-hint"
-              placeholder="Enter the difference"
-              type="number"
-              value={answers.sh}
-              onChange={(e) => {
-                setAnswers({ ...answers, sh: e.target.value });
-                setChecked(false);
-              }}
-            />
-          </label>
-          <label>
-            Subcooling (K)
-            <span className="exercise-subtraction" id="subcooling-hint">
-              {v
-                ? `${v.Tbubble.toFixed(1)} − ${v.Tco.toFixed(1)} = ? K`
-                : 'Run the simulation to calculate.'}
-            </span>
-            <Input
-              aria-label="Subcooling (K)"
-              aria-describedby="subcooling-hint"
-              placeholder="Enter the difference"
-              type="number"
-              value={answers.sc}
-              onChange={(e) => {
-                setAnswers({ ...answers, sc: e.target.value });
-                setChecked(false);
-              }}
-            />
-          </label>
-          <Button
-            disabled={!v || !answers.sh.trim() || !answers.sc.trim()}
-            onClick={() => setChecked(true)}
-          >
-            Check answers
-          </Button>
-          {checked && (
-            <p role="status">
-              {v &&
-              Math.abs(Number(answers.sh) - (v.Teo - v.Tevap)) < 0.11 &&
-              Math.abs(Number(answers.sc) - (v.Tbubble - v.Tco)) < 0.11
-                ? 'Correct. Both are 5 K in this teaching model.'
-                : 'Subtract the dew point from the evaporator outlet for superheat, and the condenser outlet from the bubble point for subcooling.'}
-            </p>
-          )}
-          <details>
-            <summary>Show formulas</summary>
-            <p>
-              Superheat = evaporator outlet − dew point.
-              <br />
-              Subcooling = bubble point − condenser outlet.
-            </p>
-          </details>
-        </section>
-      ) : (
-        <>
-          <p className="calm-kicker">INSPECT THE UNIT</p>
-          <h2>{selected ? selected : 'Choose a component'}</h2>
-          <label className="sr-only" htmlFor="component">
-            Component
-          </label>
-          <NativeSelect
-            id="component"
-            value={selected ?? ''}
-            onChange={(e) => selectValve(e.target.value as Valve)}
-          >
-            <NativeSelectOption value="" disabled>
-              Select a valve…
-            </NativeSelectOption>
-            {groups.map((group) => (
-              <optgroup key={group.label} label={group.label}>
-                {group.keys.map((key) => (
-                  <NativeSelectOption key={key} value={key}>
-                    {key} · {VALVE_NAMES[key]}
-                  </NativeSelectOption>
-                ))}
-              </optgroup>
+      <p className="calm-kicker">INSPECT THE UNIT</p>
+      <h2>{selected ? selected : 'Choose a component'}</h2>
+      <label className="sr-only" htmlFor="component">
+        Component
+      </label>
+      <NativeSelect
+        id="component"
+        value={selected ?? ''}
+        onChange={(e) => selectValve(e.target.value as Valve)}
+      >
+        <NativeSelectOption value="" disabled>
+          Select a valve…
+        </NativeSelectOption>
+        {groups.map((group) => (
+          <optgroup key={group.label} label={group.label}>
+            {group.keys.map((key) => (
+              <NativeSelectOption key={key} value={key}>
+                {key} · {VALVE_NAMES[key]}
+              </NativeSelectOption>
             ))}
-          </NativeSelect>
-          {selected ? (
-            <div className="calm-component">
-              <p>{VALVE_NAMES[selected]}</p>
-              <div className="calm-valve-action">
-                <span className="calm-position">
-                  <i className={valves[selected] ? 'is-open' : ''} />
-                  {valves[selected] ? 'Open' : 'Closed'}
-                </span>
-                <Button variant="outline" onClick={() => changeValve(selected)}>
-                  {valves[selected] ? 'Close' : 'Open'} {selected}
-                </Button>
-              </div>
-              {selected !== 'LRB' && (
-                <button
-                  className="calm-text-button"
-                  onClick={() => {
-                    setView('equipment');
-                    setFocusRequest((n) => n + 1);
-                    setSheetOpen(false);
-                  }}
-                >
-                  Zoom to component <ArrowUpRight size={14} />
-                </button>
-              )}
-              <p className="calm-small">
-                Operating a valve stops the simulation.
-              </p>
-              <p className="calm-kicker">RELATED MEASUREMENTS</p>
-              {temperatureRows(related)}
-            </div>
-          ) : (
-            <p className="calm-hint">
-              Select a marker on the photograph, or choose a valve here. Group
-              markers zoom in to reveal individual valves.
-            </p>
+          </optgroup>
+        ))}
+      </NativeSelect>
+      {selected ? (
+        <div className="calm-component">
+          <p>{VALVE_NAMES[selected]}</p>
+          <div className="calm-valve-action">
+            <span className="calm-position">
+              <i className={valves[selected] ? 'is-open' : ''} />
+              {valves[selected] ? 'Open' : 'Closed'}
+            </span>
+            <Button variant="outline" onClick={() => changeValve(selected)}>
+              {valves[selected] ? 'Close' : 'Open'} {selected}
+            </Button>
+          </div>
+          {selected !== 'LRB' && (
+            <button
+              className="calm-text-button"
+              onClick={() => {
+                setView('equipment');
+                setFocusRequest((n) => n + 1);
+                setSheetOpen(false);
+              }}
+            >
+              Zoom to component <ArrowUpRight size={14} />
+            </button>
           )}
-        </>
+          <p className="calm-small">Operating a valve stops the simulation.</p>
+          <p className="calm-kicker">RELATED MEASUREMENTS</p>
+          {temperatureRows(related)}
+        </div>
+      ) : (
+        <p className="calm-hint">
+          Select a marker on the photograph, or choose a valve here. Group
+          markers zoom in to reveal individual valves.
+        </p>
       )}
       <section className="calm-pressures" aria-label="Pressure readings">
         <div className="calm-section-heading">
@@ -824,52 +695,15 @@ export default function Home() {
       </button>
     </>
   );
-  const advanceTour = (next: number) => {
-    if (next > 6) {
-      closeTour();
-      return;
-    }
-    if (next === 1) {
-      if (tourStep === 0) reset();
-      setView('equipment');
-      setSheetOpen(false);
-    }
-    if (next === 2) {
-      setView('equipment');
-      setSheetOpen(false);
-    }
-    if (next === 3) {
-      setSheetOpen(true);
-    }
-    if (next === 4) {
-      setSheetOpen(false);
-    }
-    if (next === 5) {
-      setView('tubes');
-      setSheetOpen(false);
-    }
-    if (next === 6) {
-      setSheetOpen(true);
-      setChecked(false);
-    }
-    if (next === 0) setSheetOpen(true);
-    setTourStep(next);
+  const restoreActivity = () => {
+    setValves(initialValves());
+    setR('R134a');
+    setAmbient('25');
+    setRunning(true);
+    setUndo(null);
   };
-  const tourReady =
-    tourStep === 1
-      ? !!v
-      : tourStep === 2
-        ? selected === 'HP1'
-        : tourStep === 4
-          ? view === 'tubes'
-          : tourStep === 6
-            ? !!v &&
-              checked &&
-              Math.abs(Number(answers.sh) - (v.Teo - v.Tevap)) < 0.11 &&
-              Math.abs(Number(answers.sc) - (v.Tbubble - v.Tco)) < 0.11
-            : true;
   return (
-    <main className="calm" data-tour-active={tourStep !== null}>
+    <main className="calm" data-surface={surface}>
       <header className="calm-header">
         <div className="calm-brand">
           <span>R</span>
@@ -877,6 +711,22 @@ export default function Home() {
             TU-100 <small>Digital twin</small>
           </h1>
         </div>
+        <nav className="calm-mode-nav" aria-label="Workspace">
+          <Button
+            variant="ghost"
+            aria-pressed={surface === 'learn'}
+            onClick={() => chooseMode(true)}
+          >
+            Learn
+          </Button>
+          <Button
+            variant="ghost"
+            aria-pressed={surface === 'explore'}
+            onClick={() => chooseMode(false)}
+          >
+            Explore
+          </Button>
+        </nav>
         <div className="calm-header-actions">
           <span className={'calm-status ' + (v ? 'running' : '')} role="status">
             {model.status === 'invalid'
@@ -887,14 +737,16 @@ export default function Home() {
                   ? 'Running'
                   : 'Ready'}
           </span>
-          <Button
-            className="calm-run"
-            disabled={model.status === 'invalid' || model.status === 'range'}
-            onClick={() => setRunning(!running)}
-          >
-            {running ? <Square size={14} /> : <Play size={14} />}{' '}
-            {running ? 'Stop' : 'Run'}
-          </Button>
+          {surface === 'explore' && (
+            <Button
+              className="calm-run"
+              disabled={model.status === 'invalid' || model.status === 'range'}
+              onClick={() => setRunning(!running)}
+            >
+              {running ? <Square size={14} /> : <Play size={14} />}{' '}
+              {running ? 'Stop' : 'Run'}
+            </Button>
+          )}
           <details className="calm-menu">
             <summary aria-label="More options">•••</summary>
             <div
@@ -904,8 +756,10 @@ export default function Home() {
                   e.currentTarget.closest('details')?.removeAttribute('open');
               }}
             >
-              <button onClick={() => chooseMode(tourStep === null)}>
-                {tourStep === null ? 'Guided practice' : 'Explore freely'}
+              <button onClick={() => chooseMode(surface !== 'learn')}>
+                {surface === 'explore'
+                  ? 'Learn the cycle'
+                  : 'Explore equipment'}
               </button>
               <button onClick={() => setDialog('settings')}>
                 Operating setup
@@ -918,7 +772,7 @@ export default function Home() {
           </details>
         </div>
       </header>
-      {['invalid', 'range'].includes(model.status) && (
+      {surface === 'explore' && ['invalid', 'range'].includes(model.status) && (
         <div className="calm-error" role="alert">
           <span>
             {model.status === 'range'
@@ -932,7 +786,6 @@ export default function Home() {
                 setValves(undo);
                 setUndo(null);
                 setRunning(false);
-                setChecked(false);
               }}
             >
               Undo valve
@@ -944,168 +797,147 @@ export default function Home() {
           )}
         </div>
       )}
-      <div className="calm-workspace">
-        <section className="calm-visual">
-          <div className="calm-viewbar">
-            <label className="sr-only" htmlFor="view">
-              View
-            </label>
-            <NativeSelect
-              id="view"
-              value={view}
-              onChange={(e) => setView(e.target.value as typeof view)}
-            >
-              {[
-                ['equipment', 'Equipment'],
-                ['tubes', 'Glass tubes'],
-                ['circuit', 'Circuit reference'],
-                ['cycle', 'p–h cycle'],
-                ['model', '3D pilot'],
-              ].map(([value, label]) => (
-                <NativeSelectOption key={value} value={value}>
-                  {label}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-            <span className="calm-view-caption">
-              {tourStep === null ? (
+      {surface === 'learn' ? (
+        <LearningWorkspace
+          model={model}
+          refrigerant={r}
+          ambient={t}
+          onRestore={restoreActivity}
+          onExplore={() => chooseMode(false)}
+          onStop={() => setRunning(false)}
+        />
+      ) : (
+        <div className="calm-workspace">
+          <section className="calm-visual">
+            <div className="calm-viewbar">
+              <label className="sr-only" htmlFor="view">
+                View
+              </label>
+              <NativeSelect
+                id="view"
+                value={view}
+                onChange={(e) => setView(e.target.value as typeof view)}
+              >
+                {[
+                  ['equipment', 'Equipment'],
+                  ['tubes', 'Glass tubes'],
+                  ['circuit', 'Circuit reference'],
+                  ['cycle', 'p–h cycle'],
+                  ['model', '3D pilot'],
+                ].map(([value, label]) => (
+                  <NativeSelectOption key={value} value={value}>
+                    {label}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+              <span className="calm-view-caption">
                 <button
                   className="calm-tutorial-entry"
                   onClick={() => chooseMode(true)}
                 >
-                  Start tutorial
+                  Learn the cycle
                 </button>
-              ) : (
-                'Guided practice'
-              )}
-            </span>
-          </div>
-          <div
-            className={
-              'calm-stage ' + (view === 'equipment' ? 'is-equipment' : '')
-            }
-          >
-            {view === 'equipment' ? (
-              <Equipment
-                focusRequest={focusRequest}
-                inspected={inspected}
-                valves={valves}
-                selected={selected}
-                onSelect={selectValve}
-                hotspots={hotspots}
-                onToggleHotspots={() => setHotspots(!hotspots)}
-                mode={model.config?.mode}
-              />
-            ) : view === 'tubes' ? (
-              <ObservationTubes model={model} refrigerant={r} />
-            ) : view === 'model' ? (
-              <ModelPilot />
-            ) : view === 'cycle' ? (
-              <PHChart
-                r={r}
-                t={Number.isFinite(t) && t >= 0 && t <= 55 ? t : 25}
-                receiver={model.config?.receiver ?? true}
-                active={!!v}
-                values={v}
-              />
-            ) : (
-              <div className="circuit-view">
-                <img
-                  src="/assets/circuit.png"
-                  alt="TU-100 cooling circuit reference with reversing valves, metering devices, receiver and accumulator"
+              </span>
+            </div>
+            <div
+              className={
+                'calm-stage ' + (view === 'equipment' ? 'is-equipment' : '')
+              }
+            >
+              {view === 'equipment' ? (
+                <Equipment
+                  focusRequest={focusRequest}
+                  inspected={inspected}
+                  valves={valves}
+                  selected={selected}
+                  onSelect={selectValve}
+                  hotspots={hotspots}
+                  onToggleHotspots={() => setHotspots(!hotspots)}
+                  mode={model.config?.mode}
                 />
-                <p className="micro">
-                  Cooling reference drawing.{' '}
-                  {model.config?.mode === 'Heating'
-                    ? 'Heating swaps the upper and lower coil roles.'
-                    : ''}
-                </p>
-                <div className="flow-summary">
-                  {model.config
-                    ? `Compressor → ${model.config.mode === 'Cooling' ? 'Lower' : 'Upper'} coil (condenser) → ${model.config.receiver ? 'Receiver → ' : ''}${model.config.meter} → ${model.config.mode === 'Cooling' ? 'Upper' : 'Lower'} coil (evaporator) → ${model.config.accumulator ? 'Accumulator → ' : ''}Suction`
-                    : 'Choose a valid circuit to trace its flow.'}
+              ) : view === 'tubes' ? (
+                <ObservationTubes model={model} refrigerant={r} />
+              ) : view === 'model' ? (
+                <ModelPilot />
+              ) : view === 'cycle' ? (
+                <PHChart
+                  r={r}
+                  t={Number.isFinite(t) && t >= 0 && t <= 55 ? t : 25}
+                  receiver={model.config?.receiver ?? true}
+                  active={!!v}
+                  values={v}
+                />
+              ) : (
+                <div className="circuit-view">
+                  <img
+                    src="/assets/circuit.png"
+                    alt="TU-100 cooling circuit reference with reversing valves, metering devices, receiver and accumulator"
+                  />
+                  <p className="micro">
+                    Cooling reference drawing.{' '}
+                    {model.config?.mode === 'Heating'
+                      ? 'Heating swaps the upper and lower coil roles.'
+                      : ''}
+                  </p>
+                  <div className="flow-summary">
+                    {model.config
+                      ? `Compressor → ${model.config.mode === 'Cooling' ? 'Lower' : 'Upper'} coil (condenser) → ${model.config.receiver ? 'Receiver → ' : ''}${model.config.meter} → ${model.config.mode === 'Cooling' ? 'Upper' : 'Lower'} coil (evaporator) → ${model.config.accumulator ? 'Accumulator → ' : ''}Suction`
+                      : 'Choose a valid circuit to trace its flow.'}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        </section>
-        <aside className={'calm-inspector ' + (sheetOpen ? 'sheet-open' : '')}>
-          <button
-            className="calm-sheet-toggle"
-            aria-expanded={sheetOpen}
-            aria-controls="inspector-content"
-            onClick={() => setSheetOpen(!sheetOpen)}
+              )}
+            </div>
+          </section>
+          <aside
+            className={'calm-inspector ' + (sheetOpen ? 'sheet-open' : '')}
           >
-            <span>
-              {tourStep !== null
-                ? 'Guided practice'
-                : selected
+            <button
+              className="calm-sheet-toggle"
+              aria-expanded={sheetOpen}
+              aria-controls="inspector-content"
+              onClick={() => setSheetOpen(!sheetOpen)}
+            >
+              <span>
+                {selected
                   ? `${selected} · ${VALVE_NAMES[selected]}`
                   : 'Inspect & measure'}
-            </span>
-            <span>
-              {sheetOpen ? 'Close' : 'Open'} {sheetOpen ? '⌄' : '⌃'}
-            </span>
-          </button>
-          {(!isMobile || sheetOpen) && (
-            <div id="inspector-content" className="calm-inspector-content">
-              {inspector}
-            </div>
-          )}
-        </aside>
-      </div>
-      {tourStep !== null && dialog === null && (
-        <GuidedTour
-          step={tourStep}
-          canAdvance={tourReady}
-          onNext={() => advanceTour(tourStep + 1)}
-          onBack={() => advanceTour(tourStep - 1)}
-          onClose={closeTour}
-        />
+              </span>
+              <span>
+                {sheetOpen ? 'Close' : 'Open'} {sheetOpen ? '⌄' : '⌃'}
+              </span>
+            </button>
+            {(!isMobile || sheetOpen) && (
+              <div id="inspector-content" className="calm-inspector-content">
+                {inspector}
+              </div>
+            )}
+          </aside>
+        </div>
       )}
       <Dialog
         open={dialog !== null}
         onOpenChange={(open) => {
           if (!open) {
-            if (dialog === 'welcome') chooseMode(false);
-            else setDialog(null);
+            setDialog(null);
           }
         }}
       >
-        <DialogContent
-          className={
-            'calm-dialog ' + (dialog === 'welcome' ? 'calm-welcome' : '')
-          }
-        >
+        <DialogContent className="calm-dialog">
           <DialogTitle>
-            {dialog === 'welcome'
-              ? 'Explore the TU-100'
-              : dialog === 'settings'
-                ? 'Operating setup'
-                : dialog === 'readings'
-                  ? 'All readings'
-                  : 'About this model'}
+            {dialog === 'settings'
+              ? 'Operating setup'
+              : dialog === 'readings'
+                ? 'All readings'
+                : 'About this model'}
           </DialogTitle>
           <DialogDescription>
-            {dialog === 'welcome'
-              ? 'Choose how you’d like to begin.'
-              : dialog === 'settings'
-                ? 'Configure the circuit and operating conditions.'
-                : dialog === 'readings'
-                  ? 'Calculated values for the current circuit. Select a temperature to see its explanation.'
-                  : 'A steady-state teaching emulator, not live sensor data.'}
+            {dialog === 'settings'
+              ? 'Configure the circuit and operating conditions.'
+              : dialog === 'readings'
+                ? 'Calculated values for the current circuit. Select a temperature to see its explanation.'
+                : 'A steady-state teaching emulator, not live sensor data.'}
           </DialogDescription>
-          {dialog === 'welcome' ? (
-            <div className="calm-mode-choices">
-              <Button onClick={() => chooseMode(false)}>
-                Explore freely <ArrowUpRight size={16} />
-              </Button>
-              <Button variant="outline" onClick={() => chooseMode(true)}>
-                Guided practice
-              </Button>
-              <p>You can switch modes from the ••• menu.</p>
-            </div>
-          ) : dialog === 'settings' ? (
+          {dialog === 'settings' ? (
             <div className="calm-settings">
               <label htmlFor="preset">Configuration</label>
               <NativeSelect
@@ -1128,7 +960,6 @@ export default function Home() {
                 value={r}
                 onChange={(e) => {
                   setR(e.target.value as Refrigerant);
-                  setChecked(false);
                 }}
               >
                 {REFRIGERANTS.filter(
@@ -1152,7 +983,6 @@ export default function Home() {
                 value={ambient}
                 onChange={(e) => {
                   setAmbient(e.target.value);
-                  setChecked(false);
                 }}
                 aria-invalid={model.status === 'range'}
               />
