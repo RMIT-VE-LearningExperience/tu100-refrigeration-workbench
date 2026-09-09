@@ -722,3 +722,4 @@
 @media(prefers-reduced-motion:reduce){.guided-spotlight{transition:none}}
 @media(max-width:760px){.calm[data-tour-active=true] .calm-inspector.sheet-open .calm-inspector-content{max-height:calc(100dvh - 440px);min-height:150px}.guided-coach{max-height:calc(100dvh - 110px)}}
 .guided-focus{display:block;font-size:12px;text-decoration:underline;color:#396a46;margin:0 0 10px;min-height:32px;cursor:pointer}
+.calm-exercise{background:#fcfdf9;border-radius:6px;padding:10px}.calm-exercise input{background:#fff!important;color:#203c2b!important;border:1.5px solid #788d70!important;box-shadow:none;opacity:1}.calm-exercise input:focus{border-color:#087253!important;outline:2px solid #087253;outline-offset:2px}.exercise-subtraction{display:block;font-size:12px;font-weight:400;color:#48613e;margin:6px 0 2px}.calm-exercise input::placeholder{color:#718169}

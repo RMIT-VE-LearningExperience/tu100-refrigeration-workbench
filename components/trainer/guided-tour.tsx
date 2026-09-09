@@ -41,8 +41,8 @@ export const TOUR_STEPS = [
   },
   {
     title: 'Use the readings',
-    body: 'Calculate superheat and subcooling from these temperatures, then check your answers. Use the formulas if you need a hint.',
-    target: '.calm-exercise dl',
+    body: 'Enter the temperature difference in each white field, then select Check answers. The subtraction is shown beside each field.',
+    target: '.calm-exercise',
     action: 'Finish tutorial',
   },
 ] as const;
@@ -86,7 +86,33 @@ export function GuidedTour({
           e.getBoundingClientRect().height > 0,
       );
       if (el) {
-        const rect = el.getBoundingClientRect();
+        const raw = el.getBoundingClientRect();
+        let left = Math.max(0, raw.left),
+          top = Math.max(0, raw.top),
+          right = Math.min(innerWidth, raw.right),
+          bottom = Math.min(innerHeight, raw.bottom);
+        for (
+          let parent = el.parentElement;
+          parent;
+          parent = parent.parentElement
+        ) {
+          const style = getComputedStyle(parent);
+          const clip = parent.getBoundingClientRect();
+          if (/auto|scroll|hidden|clip/.test(style.overflowY)) {
+            top = Math.max(top, clip.top);
+            bottom = Math.min(bottom, clip.bottom);
+          }
+          if (/auto|scroll|hidden|clip/.test(style.overflowX)) {
+            left = Math.max(left, clip.left);
+            right = Math.min(right, clip.right);
+          }
+        }
+        const rect = new DOMRect(
+          left,
+          top,
+          Math.max(0, right - left),
+          Math.max(0, bottom - top),
+        );
         if (!scrolled) {
           el.scrollIntoView({
             block: 'nearest',

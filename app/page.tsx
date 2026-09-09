@@ -663,7 +663,15 @@ export default function Home() {
           </dl>
           <label>
             Superheat (K)
+            <span className="exercise-subtraction" id="superheat-hint">
+              {v
+                ? `${v.Teo.toFixed(1)} − ${v.Tevap.toFixed(1)} = ? K`
+                : 'Run the simulation to calculate.'}
+            </span>
             <Input
+              aria-label="Superheat (K)"
+              aria-describedby="superheat-hint"
+              placeholder="Enter the difference"
               type="number"
               value={answers.sh}
               onChange={(e) => {
@@ -674,7 +682,15 @@ export default function Home() {
           </label>
           <label>
             Subcooling (K)
+            <span className="exercise-subtraction" id="subcooling-hint">
+              {v
+                ? `${v.Tbubble.toFixed(1)} − ${v.Tco.toFixed(1)} = ? K`
+                : 'Run the simulation to calculate.'}
+            </span>
             <Input
+              aria-label="Subcooling (K)"
+              aria-describedby="subcooling-hint"
+              placeholder="Enter the difference"
               type="number"
               value={answers.sc}
               onChange={(e) => {
