@@ -1,0 +1,20 @@
+{
+  "R134a": {
+    "maxAbsoluteErrorKPa": 0.24186503304053986,
+    "temperatureAtMaxErrorC": 70.0,
+    "rmsErrorKPa": 0.056706858731722876,
+    "samples": 181
+  },
+  "R290": {
+    "maxAbsoluteErrorKPa": 0.303890965791652,
+    "temperatureAtMaxErrorC": 70.0,
+    "rmsErrorKPa": 0.07491558285229716,
+    "samples": 181
+  },
+  "R32": {
+    "maxAbsoluteErrorKPa": 2.1081039833979958,
+    "temperatureAtMaxErrorC": 70.0,
+    "rmsErrorKPa": 0.4670545375935351,
+    "samples": 181
+  }
+}
