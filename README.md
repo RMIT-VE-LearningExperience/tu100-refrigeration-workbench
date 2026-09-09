@@ -32,3 +32,11 @@ Six model tests exhaust all 4096 valve states, verify reference patterns, check 
 - https://www.opteon.com/en/-/media/files/opteon/o-xl20pt-si-xl20-pt-chart-si.pdf
 
 Detailed implementation plan: `../TU100_DIGITAL_TWIN_PLAN.md` in the workspace.
+
+## UX iteration — 9 September 2026
+
+Implemented persistent operation status and Run/Stop, valve undo, separate photo inspection and valve operation, a guided first run, responsive Configure/Inspect/Measure navigation, visible compact pressures on tablets/phones, fit-to-viewport photo sizing and mouse drag/scroll panning. Tube inspection now selects one of four phases and keeps its values together. The p–h chart has selectable points and a table of gauge/absolute pressure, temperature and enthalpy. Exercise readings are colocated and feedback identifies the incorrect calculation. Gauge coordinates are rounded for deterministic server/client rendering.
+
+Added an optional Blender-built 3D component pilot: see `design/3d/README.md`. It is an illustrative inspection prototype, not the full measured unit and not connected to simulated valve operation. The original photograph remains the unit reference. Physical tube-to-photo mapping, verified pipe overlays, full-unit geometry, calibrated model changes and real tube videos remain future work requiring physical-unit evidence.
+
+Browser QA has now been performed on the local iteration: guided valid run, tube selection, photo selection without changing run state, deliberate valve operation, invalid-state explanation, undo, exercise feedback, desktop/mobile/tablet layouts and rendered 3D pilot. This supersedes the earlier first-build note that browser QA had not been done. Physical device performance, assistive-technology certification and instructor validation are still outstanding.
