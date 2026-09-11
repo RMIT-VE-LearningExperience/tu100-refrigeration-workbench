@@ -71,3 +71,13 @@ Superheat and subcooling are independent activities in the Activity selector, wi
 Cycle progress, activity selection and typed practice answers are stored locally on the device. A memory fallback retains progress during the page session if storage is unavailable. Returning to Learn does not silently operate the unit: a stopped or changed model displays Resume/Restore beside the task. Explore, restart and previous-question actions remain available. The old tutorial components and spotlight styling were removed.
 
 Validation: 14 model/marker/observation/learning tests pass. Browser checks cover wrong/correct selections, Stop/change-selection/Resume, photo close-up, four-question completion, independent calculations including the reported 64 K error and worked-example recovery, and mobile question focus/reflow. Instructor review and a representative student trial remain outstanding.
+
+## Student journey rebuild — 11 September 2026
+
+The app now has three purpose-based sections: **Before class**, **At the unit** and **Simulate**. Preparation starts with a linked cycle/photo orientation, continues through component identification and reading-pair selection, and finishes with a practical handover. Superheat and subcooling include separate labelled arithmetic examples (8 K and 7 K), beyond the supported 5 K model examples. These are teaching values, not additional model states or assessment results.
+
+At the unit opens without starting the example. Component, reference mode, selected practical task and calculation choice survive section changes within the current page session. Reloading returns to the default reference; learner answers and preparation position remain device-local. **Start fresh** clears the cycle progress and both saved temperature answers, including in-memory fallbacks. It is not an identity or class-record system.
+
+The practical reference distinguishes outlet temperature from the pressure-derived saturation reference, with dew for superheat and bubble for subcooling. It describes logical measurement locations; exact physical probe locations remain unverified. The simulator labels calculated values and only shows the valve inspector beside equipment. The p–h graphic exposes state controls accessibly and the optional 3D assembly has a spatial learning prompt.
+
+Four expert critic passes preceded rebuilding and four followed it, with screenshots in the parent project's `work/review-screenshots/`. Details and student-test protocol are in `WHOLE_APP_STUDENT_REVIEW.md` in the parent directory. These were agent expert reviews, not observed student testing or a WCAG conformance audit.

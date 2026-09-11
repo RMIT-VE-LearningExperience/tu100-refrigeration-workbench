@@ -53,7 +53,7 @@ export function ModelPilot() {
   }
   return (
     <section className="model-pilot">
-      <p className="eyebrow">BLENDER · SPATIAL INSPECTION PILOT</p>
+      <p className="eyebrow">OPTIONAL · SPATIAL INSPECTION</p>
       <h2>Explore a coil assembly</h2>
       <p className="micro">
         Illustrative geometry, not a measured replica. This isolated section
@@ -112,12 +112,13 @@ export function ModelPilot() {
         focus. The 3D pilot does not operate the simulated valves.
       </p>
       <details>
-        <summary>What this pilot demonstrates</summary>
+        <summary>Why use this view?</summary>
         <p>
-          Separate coil fins, copper pipe, glass, fittings and valve parts can
-          be inspected from different angles. Full-unit dimensions, tube
-          positions and hidden pipe connections need verification before this
-          becomes an interactive replica.
+          Find the pipe passing through the fins. How do the fins help the coil
+          exchange heat with the air? Separate coil fins, copper pipe, glass,
+          fittings and valve parts can be inspected from different angles.
+          Full-unit dimensions, tube positions and hidden pipe connections need
+          verification before this becomes an interactive replica.
         </p>
       </details>
     </section>

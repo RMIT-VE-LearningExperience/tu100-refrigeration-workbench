@@ -1,6 +1,8 @@
 'use client';
 import './calm.css';
 import './learn.css';
+import './student.css';
+import { PracticalReference } from '@/components/trainer/practical-reference';
 import { LearningWorkspace } from '@/components/trainer/learning-workspace';
 import { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
@@ -218,7 +220,7 @@ function PHChart({
       </div>
       <svg
         viewBox="0 0 665 385"
-        role="img"
+        role="group"
         aria-label={`${r} pressure–enthalpy diagram with saturation dome${active ? ' and calculated steady-state cycle' : ''}`}
       >
         {[100, 200, 500, 1000, 2000, 5000, 10000].map((p) => (
@@ -283,6 +285,7 @@ function PHChart({
                     }
                   }}
                 >
+                  <circle cx={x(p[0])} cy={y(p[1])} r={16} fill="transparent" />
                   <circle
                     cx={x(p[0])}
                     cy={y(p[1])}
@@ -349,9 +352,12 @@ function PHChart({
                       aria-pressed={selectedPoint === i}
                     >
                       {
-                        ['1 Suction', '2 Discharge', '3 Liquid', '4 Expansion'][
-                          i
-                        ]
+                        [
+                          'State 1 · Suction',
+                          'State 2 · Discharge',
+                          'State 3 · Liquid',
+                          'State 4 · Expansion',
+                        ][i]
                       }
                     </button>
                   </th>
@@ -391,7 +397,9 @@ export default function Home() {
   const [inspected, setInspected] = useState(false);
   const [hotspots, setHotspots] = useState(false);
   const [offline, setOffline] = useState('');
-  const [surface, setSurface] = useState<'learn' | 'explore'>('learn');
+  const [surface, setSurface] = useState<'learn' | 'practical' | 'explore'>(
+    'learn',
+  );
   const [dialog, setDialog] = useState<'settings' | 'readings' | 'info' | null>(
     null,
   );
@@ -400,8 +408,26 @@ export default function Home() {
   const [undo, setUndo] = useState<ReturnType<typeof initialValves> | null>(
     null,
   );
+  const focusDestination = () =>
+    requestAnimationFrame(() => {
+      const heading = document.querySelector<HTMLElement>('main h2, main h3');
+      heading?.setAttribute('tabindex', '-1');
+      heading?.focus({ preventScroll: true });
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    });
+  const openPractical = () => {
+    setSurface('practical');
+    setDialog(null);
+    setSheetOpen(false);
+    focusDestination();
+  };
+  const openSimulation = (next: 'equipment' | 'tubes' = 'equipment') => {
+    setView(next);
+    chooseMode(false);
+  };
   const chooseMode = (guided: boolean) => {
     setSurface(guided ? 'learn' : 'explore');
+    focusDestination();
     setDialog(null);
     setSheetOpen(false);
   };
@@ -659,7 +685,7 @@ export default function Home() {
       )}
       <section className="calm-pressures" aria-label="Pressure readings">
         <div className="calm-section-heading">
-          <span>Pressures</span>
+          <span>Model pressures</span>
           <small>kPa(g)</small>
         </div>
         <div className="calm-pressure-row">
@@ -708,7 +734,7 @@ export default function Home() {
         <div className="calm-brand">
           <span>R</span>
           <h1>
-            TU-100 <small>Digital twin</small>
+            TU-100 <small>Learning companion</small>
           </h1>
         </div>
         <nav className="calm-mode-nav" aria-label="Workspace">
@@ -717,25 +743,36 @@ export default function Home() {
             aria-pressed={surface === 'learn'}
             onClick={() => chooseMode(true)}
           >
-            Learn
+            Before class
+          </Button>
+          <Button
+            variant="ghost"
+            aria-pressed={surface === 'practical'}
+            onClick={openPractical}
+          >
+            At the unit
           </Button>
           <Button
             variant="ghost"
             aria-pressed={surface === 'explore'}
             onClick={() => chooseMode(false)}
           >
-            Explore
+            Simulate
           </Button>
         </nav>
         <div className="calm-header-actions">
-          <span className={'calm-status ' + (v ? 'running' : '')} role="status">
+          <span
+            className={'calm-status ' + (v ? 'running' : '')}
+            role="status"
+            hidden={surface !== 'explore'}
+          >
             {model.status === 'invalid'
               ? 'Check valves'
               : model.status === 'range'
                 ? 'Check temperature'
                 : v
-                  ? 'Running'
-                  : 'Ready'}
+                  ? 'Example running'
+                  : 'Example ready'}
           </span>
           {surface === 'explore' && (
             <Button
@@ -804,10 +841,15 @@ export default function Home() {
           ambient={t}
           onRestore={restoreActivity}
           onExplore={() => chooseMode(false)}
+          onPractical={openPractical}
           onStop={() => setRunning(false)}
         />
-      ) : (
-        <div className="calm-workspace">
+      ) : surface === 'explore' ? (
+        <div
+          className={
+            'calm-workspace ' + (view !== 'equipment' ? 'visual-only' : '')
+          }
+        >
           <section className="calm-visual">
             <div className="calm-viewbar">
               <label className="sr-only" htmlFor="view">
@@ -823,7 +865,7 @@ export default function Home() {
                   ['tubes', 'Glass tubes'],
                   ['circuit', 'Circuit reference'],
                   ['cycle', 'p–h cycle'],
-                  ['model', '3D pilot'],
+                  ['model', '3D inspection · optional'],
                 ].map(([value, label]) => (
                   <NativeSelectOption key={value} value={value}>
                     {label}
@@ -835,10 +877,25 @@ export default function Home() {
                   className="calm-tutorial-entry"
                   onClick={() => chooseMode(true)}
                 >
-                  Learn the cycle
+                  Prepare for class
                 </button>
               </span>
             </div>
+            <p className="simulation-context">
+              Calculated teaching model · {r} · {ambient}°C ambient ·{' '}
+              {model.config?.mode ?? 'Custom circuit'}. Values are not live
+              measurements.
+            </p>
+            {view !== 'equipment' && (
+              <div className="simulation-tools">
+                <Button variant="outline" onClick={() => setDialog('settings')}>
+                  Example setup
+                </Button>
+                <Button variant="outline" onClick={() => setDialog('readings')}>
+                  Model readings
+                </Button>
+              </div>
+            )}
             <div
               className={
                 'calm-stage ' + (view === 'equipment' ? 'is-equipment' : '')
@@ -888,32 +945,37 @@ export default function Home() {
               )}
             </div>
           </section>
-          <aside
-            className={'calm-inspector ' + (sheetOpen ? 'sheet-open' : '')}
-          >
-            <button
-              className="calm-sheet-toggle"
-              aria-expanded={sheetOpen}
-              aria-controls="inspector-content"
-              onClick={() => setSheetOpen(!sheetOpen)}
+          {view === 'equipment' && (
+            <aside
+              className={'calm-inspector ' + (sheetOpen ? 'sheet-open' : '')}
             >
-              <span>
-                {selected
-                  ? `${selected} · ${VALVE_NAMES[selected]}`
-                  : 'Inspect & measure'}
-              </span>
-              <span>
-                {sheetOpen ? 'Close' : 'Open'} {sheetOpen ? '⌄' : '⌃'}
-              </span>
-            </button>
-            {(!isMobile || sheetOpen) && (
-              <div id="inspector-content" className="calm-inspector-content">
-                {inspector}
-              </div>
-            )}
-          </aside>
+              <button
+                className="calm-sheet-toggle"
+                aria-expanded={sheetOpen}
+                aria-controls="inspector-content"
+                onClick={() => setSheetOpen(!sheetOpen)}
+              >
+                <span>
+                  {selected
+                    ? `${selected} · ${VALVE_NAMES[selected]}`
+                    : 'Inspect & measure'}
+                </span>
+                <span>
+                  {sheetOpen ? 'Close' : 'Open'} {sheetOpen ? '⌄' : '⌃'}
+                </span>
+              </button>
+              {(!isMobile || sheetOpen) && (
+                <div id="inspector-content" className="calm-inspector-content">
+                  {inspector}
+                </div>
+              )}
+            </aside>
+          )}
         </div>
-      )}
+      ) : null}
+      <div hidden={surface !== 'practical'}>
+        <PracticalReference onSimulate={openSimulation} />
+      </div>
       <Dialog
         open={dialog !== null}
         onOpenChange={(open) => {

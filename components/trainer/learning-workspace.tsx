@@ -29,10 +29,15 @@ import {
   NativeSelect,
   NativeSelectOption,
 } from '@/components/ui/native-select';
-import { TemperaturePractice } from './temperature-practice';
+import {
+  TemperaturePractice,
+  clearPracticeAnswers,
+} from './temperature-practice';
+import { PreparationStart, PreparationHandover } from './preparation';
+import { PART_CODES } from './practical-reference';
 let sessionProgress = emptyProgress();
 let sessionProgressReady = false;
-let sessionActivity = 'cycle';
+let sessionActivity = 'overview';
 let sessionActivityReady = false;
 
 type Props = {
@@ -41,6 +46,7 @@ type Props = {
   ambient: number;
   onRestore: () => void;
   onExplore: () => void;
+  onPractical: () => void;
   onStop: () => void;
 };
 function CycleActivity({
@@ -147,7 +153,7 @@ function CycleActivity({
       <div className="learn-heading">
         <div>
           <p className="learn-eyebrow">LEARN THE CYCLE</p>
-          <h2 tabIndex={-1}>Follow the refrigerant</h2>
+          <h2 tabIndex={-1}>Identify the four main parts</h2>
         </div>
         <div className="learn-session">
           <span>R134a · Cooling example</span>
@@ -164,7 +170,7 @@ function CycleActivity({
             <span>
               {progress.completed
                 ? 'Activity complete'
-                : `Question ${progress.step + 1} of ${QUESTIONS.length}`}
+                : `Part check ${progress.step + 1} of ${QUESTIONS.length}`}
             </span>
             <span className="learn-progress-dots" aria-hidden="true">
               {QUESTIONS.map((_, i) => (
@@ -183,12 +189,12 @@ function CycleActivity({
           </div>
           <h3 ref={questionHeading} tabIndex={-1}>
             {progress.completed
-              ? 'You have followed the cycle.'
+              ? 'You’ve identified the four main components.'
               : question.prompt}
           </h3>
           <p>
             {progress.completed
-              ? 'Absorb heat, compress the vapour, release heat, then lower the pressure. Keep exploring the four components.'
+              ? 'Now trace the loop and explain where heat enters and leaves. Next, choose the readings you’ll use at the coils.'
               : progress.started
                 ? 'Select a component on the unit or in the cycle below.'
                 : 'Start the example, then select a component to see what it does.'}
@@ -325,7 +331,7 @@ function CycleActivity({
                       aria-pressed={s.id === progress.selected}
                       onClick={() => select(s.id)}
                     >
-                      {i + 1}
+                      {PART_CODES[i]}
                     </Button>
                   ))}
                 </div>
@@ -338,7 +344,7 @@ function CycleActivity({
                   <span>{stage.location}</span>
                 </>
               ) : (
-                <span>Select one of the four numbered components.</span>
+                <span>Select a marked part or choose its name below.</span>
               )}
             </div>
           </div>
@@ -353,7 +359,7 @@ function CycleActivity({
                   aria-pressed={s.id === progress.selected}
                   onClick={() => select(s.id)}
                 >
-                  <span className="learn-cycle-number">{i + 1}</span>
+                  <span className="learn-cycle-number">{PART_CODES[i]}</span>
                   <span>{s.name}</span>
                 </Button>
                 {i < 3 && <ArrowRight size={15} aria-hidden="true" />}
@@ -431,7 +437,7 @@ function CycleActivity({
             </>
           ) : (
             <div className="learn-empty">
-              <span className="learn-empty-number">01 → 04</span>
+              <span className="learn-empty-number">Find → explain</span>
               <p>
                 Find a part. See its role.
                 <br />
@@ -459,14 +465,22 @@ function CycleActivity({
 
 export function LearningWorkspace(props: Props) {
   const activityRoot = useRef<HTMLDivElement>(null);
-  const [activity, setActivity] = useState('cycle');
+  const [activity, setActivity] = useState('overview');
+  const [revision, setRevision] = useState(0);
+  const [resetNotice, setResetNotice] = useState('');
   useEffect(() => {
     try {
       const stored = localStorage.getItem('tu100-learning-activity');
       setActivity(
         sessionActivityReady
           ? sessionActivity
-          : ['cycle', 'superheat', 'subcooling'].includes(stored ?? '')
+          : [
+                'overview',
+                'cycle',
+                'superheat',
+                'subcooling',
+                'handover',
+              ].includes(stored ?? '')
             ? stored!
             : sessionActivity,
       );
@@ -475,12 +489,13 @@ export function LearningWorkspace(props: Props) {
     }
   }, []);
   const choose = (next: string) => {
+    setResetNotice('');
     setActivity(next);
     sessionActivity = next;
     sessionActivityReady = true;
     requestAnimationFrame(() => {
       const heading =
-        activityRoot.current?.querySelector<HTMLHeadingElement>('.learn h2');
+        activityRoot.current?.querySelector<HTMLHeadingElement>('h2');
       heading?.focus({ preventScroll: true });
       heading?.scrollIntoView({ block: 'nearest' });
     });
@@ -488,35 +503,74 @@ export function LearningWorkspace(props: Props) {
       localStorage.setItem('tu100-learning-activity', next);
     } catch {}
   };
+  const resetLearner = () => {
+    sessionProgress = emptyProgress();
+    sessionProgressReady = true;
+    clearPracticeAnswers();
+    try {
+      localStorage.removeItem('tu100-cycle-activity-v1');
+    } catch {}
+    setRevision((r) => r + 1);
+    choose('overview');
+    setResetNotice(
+      'New practice started. Previous answers and component progress cleared on this device.',
+    );
+  };
   return (
     <div ref={activityRoot}>
       <div className="learn-pickerbar">
-        <label htmlFor="learning-activity">Activity</label>
+        <label htmlFor="learning-activity">Preparation</label>
         <NativeSelect
           id="learning-activity"
           value={activity}
           onChange={(event) => choose(event.target.value)}
         >
+          <NativeSelectOption value="overview">Start here</NativeSelectOption>
           <NativeSelectOption value="cycle">
-            Follow the refrigerant
+            1 · Find the parts
           </NativeSelectOption>
           <NativeSelectOption value="superheat">
-            Practise superheat
+            2 · Superheat
           </NativeSelectOption>
           <NativeSelectOption value="subcooling">
-            Practise subcooling
+            3 · Subcooling
+          </NativeSelectOption>
+          <NativeSelectOption value="handover">
+            4 · Take it to class
           </NativeSelectOption>
         </NativeSelect>
+        <Button variant="link" className="new-learner" onClick={resetLearner}>
+          Start fresh
+        </Button>
       </div>
-      {activity === 'cycle' ? (
-        <CycleActivity {...props} onPractice={() => choose('superheat')} />
+      {resetNotice && (
+        <p className="learner-reset-notice" role="status">
+          {resetNotice}
+        </p>
+      )}
+      {activity === 'overview' ? (
+        <PreparationStart
+          onStart={() => choose('cycle')}
+          onPractical={props.onPractical}
+        />
+      ) : activity === 'handover' ? (
+        <PreparationHandover
+          onPractical={props.onPractical}
+          onReview={() => choose('cycle')}
+        />
+      ) : activity === 'cycle' ? (
+        <CycleActivity
+          key={revision}
+          {...props}
+          onPractice={() => choose('superheat')}
+        />
       ) : (
         <TemperaturePractice
           {...props}
           key={activity}
           kind={activity === 'superheat' ? 'superheat' : 'subcooling'}
           onNext={() =>
-            activity === 'superheat' ? choose('subcooling') : choose('cycle')
+            activity === 'superheat' ? choose('subcooling') : choose('handover')
           }
         />
       )}
