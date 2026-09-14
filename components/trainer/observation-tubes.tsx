@@ -6,9 +6,11 @@ import type { simulate } from '@/lib/model';
 export function ObservationTubes({
   model,
   refrigerant,
+  onSelectTube,
 }: {
   model: ReturnType<typeof simulate>;
   refrigerant: string;
+  onSelectTube?: (id: string) => void;
 }) {
   const [selected, setSelected] = useState('evaporator-in');
   const [paused, setPaused] = useState(false);
@@ -47,8 +49,12 @@ export function ObservationTubes({
           <Button
             variant="ghost"
             key={tube.id}
+            data-tour-tube={tube.id}
             aria-pressed={selected === tube.id}
-            onClick={() => setSelected(tube.id)}
+            onClick={() => {
+              setSelected(tube.id);
+              onSelectTube?.(tube.id);
+            }}
           >
             {tube.title}
           </Button>

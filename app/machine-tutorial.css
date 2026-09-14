@@ -1,0 +1,199 @@
+.machine-coach {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px;
+  padding: 20px 62px 20px 28px;
+  position: relative;
+  background: #fffef8;
+  color: #23392c;
+  border-bottom: 1px solid #d9dfd0;
+}
+.machine-coach.is-workspace {
+  position: sticky;
+  top: var(--machine-header-height, 72px);
+  z-index: 36;
+}
+.machine-coach h2 {
+  margin: 5px 0 7px;
+  font-size: 21px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+.machine-coach h2:focus {
+  outline: none;
+}
+.machine-coach p {
+  margin: 0;
+  max-width: 830px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.machine-coach .machine-coach-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b4a20;
+}
+.machine-ring-key {
+  width: 12px;
+  height: 12px;
+  border: 2px solid #b76b11;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.machine-coach .machine-feedback {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 21px;
+  margin-top: 7px;
+  font-size: 14px;
+  color: #496244;
+}
+.machine-coach-actions {
+  min-width: 172px;
+  align-self: center;
+  display: grid;
+  gap: 4px;
+}
+.machine-coach button {
+  min-height: 44px;
+  font-size: 14px;
+}
+.machine-secondary-actions {
+  display: flex;
+  justify-content: center;
+}
+.machine-coach .machine-exit {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 44px;
+  padding: 0;
+}
+.machine-recover {
+  color: #326244;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.machine-coach.is-embedded {
+  padding: 14px 46px 14px 14px;
+  border: 1px solid #e5d8bd;
+  border-radius: 8px;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+.machine-coach.is-embedded .machine-coach-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+.machine-coach.is-embedded .machine-feedback {
+  min-height: 0;
+}
+.machine-target {
+  outline: 3px solid #b76b11 !important;
+  outline-offset: 5px !important;
+  scroll-margin-top: calc(
+    var(--machine-header-height, 72px) + var(--machine-coach-height, 200px) +
+      24px
+  );
+  scroll-margin-bottom: 24px;
+}
+input.machine-target,
+select.machine-target {
+  background: white !important;
+  color: #23392c !important;
+}
+[role='dialog'] .machine-target,
+[data-slot='dialog-content'] .machine-target {
+  scroll-margin-top: 20px;
+}
+.calm[data-machine-tutorial] .equipment-canvas {
+  height: calc(100dvh - 250px - var(--machine-coach-height, 180px));
+  min-height: 290px;
+}
+.calm[data-machine-tutorial] .calm-inspector-content {
+  position: static;
+}
+.machine-tutorial-launch {
+  min-height: 44px;
+}
+.machine-launch-short {
+  display: none;
+}
+@media (max-width: 1000px) {
+  .machine-tutorial-launch {
+    font-size: 13px;
+    padding-inline: 9px;
+  }
+}
+@media (max-width: 760px) {
+  .machine-coach {
+    padding: 12px 48px 12px 16px;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .machine-coach h2 {
+    font-size: 19px;
+  }
+  .machine-coach p {
+    font-size: 14px;
+  }
+  .machine-coach .machine-feedback {
+    font-size: 13px;
+  }
+  .machine-coach-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+  }
+  .machine-coach-actions > button:first-child {
+    flex: 1;
+  }
+  .machine-coach .machine-recover {
+    flex-basis: 100%;
+    min-height: 32px;
+  }
+  .machine-coach .machine-secondary-actions button {
+    padding-inline: 10px;
+  }
+  .calm[data-machine-tutorial] .calm-workspace {
+    padding-bottom: 0;
+  }
+  .calm[data-machine-tutorial] .calm-inspector {
+    position: static;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .calm[data-machine-tutorial] .calm-inspector-content {
+    max-height: none;
+    overflow: visible;
+  }
+  .calm[data-machine-tutorial] .equipment-canvas {
+    min-height: 280px;
+  }
+  .machine-coach.is-embedded {
+    padding-right: 40px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .machine-target {
+    scroll-behavior: auto;
+    transition: none !important;
+  }
+}
+@media (max-width: 400px) {
+  .machine-launch-full {
+    display: none;
+  }
+  .machine-launch-short {
+    display: inline;
+  }
+  .calm-brand h1 {
+    white-space: nowrap;
+  }
+}

@@ -2,6 +2,17 @@
 import './calm.css';
 import './learn.css';
 import './student.css';
+import './machine-tutorial.css';
+import { MachineTutorial } from '@/components/trainer/machine-tutorial';
+import {
+  MACHINE_STEPS,
+  newMachineTutorial,
+  recordMachineEvent,
+  advanceMachineTutorial,
+  machineStepDone,
+  type MachineProgress,
+  type MachineEvent,
+} from '@/lib/machine-tutorial';
 import { PracticalReference } from '@/components/trainer/practical-reference';
 import { LearningWorkspace } from '@/components/trainer/learning-workspace';
 import { useEffect, useRef, useState } from 'react';
@@ -404,6 +415,8 @@ export default function Home() {
     null,
   );
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [receiverOpen, setReceiverOpen] = useState(false);
+  const [tutorial, setTutorial] = useState<MachineProgress | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [undo, setUndo] = useState<ReturnType<typeof initialValves> | null>(
     null,
@@ -416,6 +429,8 @@ export default function Home() {
       window.scrollTo({ top: 0, behavior: 'instant' });
     });
   const openPractical = () => {
+    setTutorial(null);
+    setReceiverOpen(false);
     setSurface('practical');
     setDialog(null);
     setSheetOpen(false);
@@ -426,6 +441,8 @@ export default function Home() {
     chooseMode(false);
   };
   const chooseMode = (guided: boolean) => {
+    setTutorial(null);
+    setReceiverOpen(false);
     setSurface(guided ? 'learn' : 'explore');
     focusDestination();
     setDialog(null);
@@ -444,11 +461,25 @@ export default function Home() {
   const nearest = nearestConfiguration(valves);
   const snapshot = useRef({ r, t, valves, running });
   snapshot.current = { r, t, valves, running };
+  const markTutorial = (event: MachineEvent) =>
+    setTutorial((p) => (p ? recordMachineEvent(p, event) : p));
   const changeValve = (key: Valve) => {
-    setUndo({ ...valves });
+    if (key === 'LRB') markTutorial('valve');
+    if (tutorial?.step === 3)
+      setTutorial((p) =>
+        p ? { ...p, events: { ...p.events, undo: false } } : p,
+      );
+    setUndo(tutorial?.step === 3 ? initialValves() : { ...valves });
     setValves((old) => ({ ...old, [key]: !old[key] }));
     setSelected(key);
     setRunning(false);
+  };
+  const undoValve = () => {
+    if (!undo) return;
+    setValves(undo);
+    setUndo(null);
+    setRunning(false);
+    markTutorial('undo');
   };
   const selectConfig = (id: string) => {
     const c = CONFIGURATIONS.find((c) => c.id === id);
@@ -596,17 +627,236 @@ export default function Home() {
         ? ['Tco', 'Teo']
         : ['Tdis', 'Teo'];
   const selectValve = (key: Valve) => {
+    if (key === 'HP1') markTutorial('hp1');
+    if (key === 'LRB' && receiverOpen) markTutorial('receiver');
     setInspected(true);
     setSelected(key);
     setSheetOpen(true);
   };
+  const setupMatches =
+    model.config?.id === 'cool-txv-all' && r === 'R134a' && t === 25;
+  const tutorialDone = tutorial
+    ? machineStepDone(tutorial, {
+        running,
+        hasReadings: !!v,
+        setupMatches,
+      })
+    : false;
+  const loadTutorialExample = () => {
+    setValves(initialValves());
+    setR('R134a');
+    setAmbient('25');
+    setRunning(false);
+    setUndo(null);
+  };
+  const startTutorial = () => {
+    loadTutorialExample();
+    setTutorial(newMachineTutorial());
+    setSurface('explore');
+    setView('equipment');
+    setSelected(null);
+    setDialog(null);
+    setReceiverOpen(false);
+    setSheetOpen(false);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
+  const enterTutorialStep = (next: MachineProgress) => {
+    setTutorial(
+      next.step === 3 && !next.events.undo
+        ? { ...next, events: { ...next.events, valve: false, undo: false } }
+        : next,
+    );
+    setDialog(null);
+    setReceiverOpen(false);
+    if (next.step >= MACHINE_STEPS.length) {
+      setRunning(false);
+      setView('equipment');
+      setSheetOpen(false);
+    } else if (next.step < 7) {
+      setView('equipment');
+      setSheetOpen([1, 3, 4, 6].includes(next.step));
+      if (next.step === 3) {
+        setSelected('LRB');
+        if (!next.events.undo) loadTutorialExample();
+      }
+      if (next.step === 4) setRunning(false);
+    }
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
+  const closeTutorial = () => {
+    setTutorial(null);
+    setDialog(null);
+    setReceiverOpen(false);
+    requestAnimationFrame(() =>
+      document
+        .querySelector<HTMLButtonElement>('[data-tour="launch"]')
+        ?.focus(),
+    );
+  };
+  const needsRun = !!tutorial && tutorial.step >= 5 && tutorial.step <= 7 && !v;
+  const tutorialTargets = (() => {
+    if (!tutorial || tutorial.step >= MACHINE_STEPS.length) return [];
+    if (needsRun) return ['[data-tour="run"]'];
+    switch (tutorial.step) {
+      case 0:
+        return ['[data-tour="zoom"]'];
+      case 1:
+        return ['[data-tour="component-picker"]', '[data-tour-valves~="HP1"]'];
+      case 2:
+        return receiverOpen
+          ? ['[data-tour-receiver="LRB"]']
+          : ['[data-tour-valves~="LRB"]'];
+      case 3:
+        return tutorial.events.valve && !tutorial.events.undo
+          ? ['[data-tour="undo"]']
+          : ['[data-tour="valve-action"]'];
+      case 4:
+        return dialog === 'settings'
+          ? [
+              '[data-tour="preset"]',
+              '[data-tour="refrigerant"]',
+              '[data-tour="ambient"]',
+              '[data-tour="setup-done"]',
+            ]
+          : ['[data-tour="setup"]'];
+      case 5:
+        return ['[data-tour="run"]'];
+      case 6:
+        return dialog === 'readings'
+          ? ['[data-tour-reading="Teo"]', '[data-tour="gauges"]']
+          : ['[data-tour="readings"]'];
+      case 7:
+        return view === 'tubes'
+          ? ['[data-tour-tube="condenser-out"]']
+          : ['[data-tour="view"]'];
+      case 8:
+        return ['[data-tour="run"]'];
+      default:
+        return [];
+    }
+  })();
+  const revealTutorialTarget = () => {
+    if (!tutorial) return;
+    const expectedDialog =
+      tutorial.step === 4
+        ? 'settings'
+        : tutorial.step === 6
+          ? 'readings'
+          : null;
+    const keepDialog = !needsRun && dialog === expectedDialog;
+    if (dialog && !keepDialog) setDialog(null);
+    if (receiverOpen && tutorial.step !== 2) setReceiverOpen(false);
+    if (tutorial.step < 7) setView('equipment');
+    if ([1, 3, 4, 6].includes(tutorial.step)) setSheetOpen(true);
+    if (tutorial.step === 3) setSelected('LRB');
+    if (tutorial.step === 2 && !receiverOpen) {
+      setReceiverOpen(true);
+      return;
+    }
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const scope =
+          !needsRun &&
+          ((dialog && keepDialog) || (receiverOpen && tutorial.step === 2))
+            ? (document.querySelector<HTMLElement>(
+                '[data-slot="dialog-content"]',
+              ) ?? document)
+            : document;
+        const target = tutorialTargets
+          .map((s) => scope.querySelector<HTMLElement>(s))
+          .find((el) => el && el.getClientRects().length > 0);
+        if (!target) return;
+        target.scrollIntoView({ block: 'start', behavior: 'instant' });
+        target.focus({ preventScroll: true });
+      }),
+    );
+  };
+  const tutorialInstruction = !tutorial
+    ? ''
+    : needsRun && tutorial.step > 5
+      ? 'The readings need a running example. Select Run, then continue this step. Restore the tutorial example if the setup needs fixing.'
+      : ([
+          'A stopped R134a, 25°C cooling example is loaded. Try Labels, + and Fit to get familiar with the photograph. This walkthrough operates the simulation.',
+          'Choose HP1 on the photograph or in the Component list. Inspecting a valve shows its name and position; it does not turn the valve.',
+          'Open the receiver group and select LRB in the close-up. LRB is the bypass; the middle valve, LRI, sits behind LRK in the front view.',
+          tutorial.events.valve && !tutorial.events.undo
+            ? 'The valve change stops the simulation. Select Undo valve to restore this tutorial’s cooling setup.'
+            : 'In this cooling example LRB is closed. Select Open LRB, then Undo valve. Practise with the virtual control here.',
+          'Open Operating setup. Use Cooling · TXV · Receiver + accumulator, R134a and 25°C, then select Done. These settings choose a supported teaching example.',
+          'Select Run. Example running means calculated pressures and temperatures are available; these are not live measurements from the machine.',
+          'Open All readings. Compare condenser and evaporator pressure, then expand Evaporator outlet. Pressures use kPa(g); temperatures use °C.',
+          view === 'tubes'
+            ? 'Select Condenser outlet and compare its liquid state with the evaporator inlet mixture. The animation illustrates expected phases, not measured gas flow.'
+            : 'Choose Glass tubes in the View menu to see the expected refrigerant state at different parts of the cycle.',
+          'Select Stop. During practical work, use At the unit to find components and choose readings, alongside your teacher’s operating procedure.',
+        ][tutorial.step] ?? '');
+  const tutorialFeedback =
+    !tutorialDone || !tutorial
+      ? undefined
+      : [
+          undefined,
+          'HP1 inspected. Selecting a component opens its details without operating it.',
+          'LRB identified in the close-up.',
+          'The tutorial’s cooling setup is restored.',
+          'The cooling example is ready.',
+          'The example is running.',
+          'You found the temperature measurement and its location.',
+          'Condenser outlet: subcooled liquid. Clear liquid and vapour can look similar through real glass.',
+          'The example is stopped. Model readings are cleared.',
+        ][tutorial.step];
+  const renderTutorial = (embedded = false) =>
+    tutorial && (
+      <MachineTutorial
+        progress={tutorial}
+        instruction={tutorialInstruction}
+        feedback={tutorialFeedback}
+        done={tutorialDone}
+        targets={tutorialTargets}
+        embedded={embedded}
+        onNext={() => enterTutorialStep(advanceMachineTutorial(tutorial))}
+        onBack={() =>
+          enterTutorialStep({
+            ...tutorial,
+            step: Math.max(0, tutorial.step - 1),
+          })
+        }
+        onSkip={() => enterTutorialStep(advanceMachineTutorial(tutorial, true))}
+        onClose={closeTutorial}
+        onReveal={revealTutorialTarget}
+        onPractical={openPractical}
+        onRecover={
+          tutorial.step >= 3 && tutorial.step <= 7
+            ? () => {
+                loadTutorialExample();
+                if (tutorial.step === 3)
+                  setTutorial({
+                    ...tutorial,
+                    events: { ...tutorial.events, valve: false, undo: false },
+                  });
+              }
+            : undefined
+        }
+      />
+    );
   const temperatureRows = (keys?: readonly string[]) => (
     <div className="temperature-list">
       {points
         .filter(([key]) => !keys || keys.includes(key))
         .map(([key, name, location, equation]) => (
-          <details key={key} className="temperature-row">
-            <summary>
+          <details
+            key={key}
+            className="temperature-row"
+            onToggle={(e) => {
+              if (
+                e.currentTarget.open &&
+                key === 'Teo' &&
+                dialog === 'readings' &&
+                v
+              )
+                markTutorial('reading');
+            }}
+          >
+            <summary data-tour-reading={key}>
               <span>{name}</span>
               <strong>
                 {v
@@ -620,6 +870,19 @@ export default function Home() {
               {location}.<br />
               <code>{equation}</code>
             </p>
+            {key === 'Teo' &&
+              dialog === 'readings' &&
+              tutorial?.step === 6 &&
+              tutorialDone && (
+                <Button
+                  className="my-3 min-h-11"
+                  onClick={() =>
+                    enterTutorialStep(advanceMachineTutorial(tutorial))
+                  }
+                >
+                  Continue to glass tubes
+                </Button>
+              )}
           </details>
         ))}
     </div>
@@ -633,6 +896,7 @@ export default function Home() {
       </label>
       <NativeSelect
         id="component"
+        data-tour="component-picker"
         value={selected ?? ''}
         onChange={(e) => selectValve(e.target.value as Valve)}
       >
@@ -657,7 +921,11 @@ export default function Home() {
               <i className={valves[selected] ? 'is-open' : ''} />
               {valves[selected] ? 'Open' : 'Closed'}
             </span>
-            <Button variant="outline" onClick={() => changeValve(selected)}>
+            <Button
+              data-tour="valve-action"
+              variant="outline"
+              onClick={() => changeValve(selected)}
+            >
               {valves[selected] ? 'Close' : 'Open'} {selected}
             </Button>
           </div>
@@ -704,13 +972,18 @@ export default function Home() {
           ))}
         </div>
         <button
+          data-tour="readings"
           className="calm-text-button"
           onClick={() => setDialog('readings')}
         >
           All readings <ArrowUpRight size={14} />
         </button>
       </section>
-      <button className="calm-setup-link" onClick={() => setDialog('settings')}>
+      <button
+        data-tour="setup"
+        className="calm-setup-link"
+        onClick={() => setDialog('settings')}
+      >
         <SlidersHorizontal size={16} />
         <span>
           <strong>Operating setup</strong>
@@ -730,7 +1003,11 @@ export default function Home() {
     setUndo(null);
   };
   return (
-    <main className="calm" data-surface={surface}>
+    <main
+      className="calm"
+      data-surface={surface}
+      data-machine-tutorial={tutorial ? 'active' : undefined}
+    >
       <header className="calm-header">
         <div className="calm-brand">
           <span>R</span>
@@ -762,6 +1039,18 @@ export default function Home() {
           </Button>
         </nav>
         <div className="calm-header-actions">
+          {!tutorial && (
+            <Button
+              variant="outline"
+              className="machine-tutorial-launch"
+              aria-label="Machine tutorial"
+              data-tour="launch"
+              onClick={startTutorial}
+            >
+              <span className="machine-launch-full">Machine tutorial</span>
+              <span className="machine-launch-short">Tutorial</span>
+            </Button>
+          )}
           <span
             className={'calm-status ' + (v ? 'running' : '')}
             role="status"
@@ -778,6 +1067,7 @@ export default function Home() {
           {surface === 'explore' && (
             <Button
               className="calm-run"
+              data-tour="run"
               disabled={model.status === 'invalid' || model.status === 'range'}
               onClick={() => setRunning(!running)}
             >
@@ -799,6 +1089,7 @@ export default function Home() {
                   ? 'Learn the cycle'
                   : 'Explore equipment'}
               </button>
+              <button onClick={startTutorial}>Start machine tutorial</button>
               <button onClick={() => setDialog('settings')}>
                 Operating setup
               </button>
@@ -810,31 +1101,32 @@ export default function Home() {
           </details>
         </div>
       </header>
-      {surface === 'explore' && ['invalid', 'range'].includes(model.status) && (
-        <div className="calm-error" role="alert">
-          <span>
-            {model.status === 'range'
-              ? 'Enter an ambient temperature from 0 to 55°C.'
-              : `To restore a valid circuit: ${nearest.changes.map((key) => `${key} ${nearest.configuration.bits[VALVES.indexOf(key)] === '1' ? 'open' : 'closed'}`).join(', ')}.`}
-          </span>
-          {undo ? (
-            <Button
-              variant="outline"
-              onClick={() => {
-                setValves(undo);
-                setUndo(null);
-                setRunning(false);
-              }}
-            >
-              Undo valve
-            </Button>
-          ) : (
-            <Button variant="outline" onClick={() => setDialog('settings')}>
-              Review setup
-            </Button>
-          )}
-        </div>
-      )}
+      {tutorial && !dialog && !receiverOpen && renderTutorial()}
+      {surface === 'explore' &&
+        (['invalid', 'range'].includes(model.status) ||
+          (tutorial?.step === 3 &&
+            tutorial.events.valve &&
+            !tutorial.events.undo &&
+            undo)) && (
+          <div className="calm-error" role="alert">
+            <span>
+              {model.status === 'range'
+                ? 'Enter an ambient temperature from 0 to 55°C.'
+                : model.status === 'invalid'
+                  ? `To restore a valid circuit: ${nearest.changes.map((key) => `${key} ${nearest.configuration.bits[VALVES.indexOf(key)] === '1' ? 'open' : 'closed'}`).join(', ')}.`
+                  : 'A virtual valve has changed. Undo restores its previous position.'}
+            </span>
+            {undo ? (
+              <Button data-tour="undo" variant="outline" onClick={undoValve}>
+                Undo valve
+              </Button>
+            ) : (
+              <Button variant="outline" onClick={() => setDialog('settings')}>
+                Review setup
+              </Button>
+            )}
+          </div>
+        )}
       {surface === 'learn' ? (
         <LearningWorkspace
           model={model}
@@ -858,6 +1150,7 @@ export default function Home() {
               </label>
               <NativeSelect
                 id="view"
+                data-tour="view"
                 value={view}
                 onChange={(e) => setView(e.target.value as typeof view)}
               >
@@ -904,6 +1197,11 @@ export default function Home() {
             >
               {view === 'equipment' ? (
                 <Equipment
+                  receiverOpen={receiverOpen}
+                  onReceiverOpenChange={setReceiverOpen}
+                  tutorial={
+                    tutorial && receiverOpen ? renderTutorial(true) : undefined
+                  }
                   focusRequest={focusRequest}
                   inspected={inspected}
                   valves={valves}
@@ -914,7 +1212,13 @@ export default function Home() {
                   mode={model.config?.mode}
                 />
               ) : view === 'tubes' ? (
-                <ObservationTubes model={model} refrigerant={r} />
+                <ObservationTubes
+                  model={model}
+                  refrigerant={r}
+                  onSelectTube={(id) => {
+                    if (id === 'condenser-out' && v) markTutorial('tube');
+                  }}
+                />
               ) : view === 'model' ? (
                 <ModelPilot />
               ) : view === 'cycle' ? (
@@ -1000,11 +1304,13 @@ export default function Home() {
                 ? 'Calculated values for the current circuit. Select a temperature to see its explanation.'
                 : 'A steady-state teaching emulator, not live sensor data.'}
           </DialogDescription>
+          {tutorial && dialog && renderTutorial(true)}
           {dialog === 'settings' ? (
             <div className="calm-settings">
               <label htmlFor="preset">Configuration</label>
               <NativeSelect
                 id="preset"
+                data-tour="preset"
                 value={model.config?.id ?? ''}
                 onChange={(e) => selectConfig(e.target.value)}
               >
@@ -1020,6 +1326,7 @@ export default function Home() {
               <label htmlFor="refrigerant">Refrigerant</label>
               <NativeSelect
                 id="refrigerant"
+                data-tour="refrigerant"
                 value={r}
                 onChange={(e) => {
                   setR(e.target.value as Refrigerant);
@@ -1039,6 +1346,7 @@ export default function Home() {
               <label htmlFor="ambient">Ambient air · °C</label>
               <Input
                 id="ambient"
+                data-tour="ambient"
                 type="number"
                 min="0"
                 max="55"
@@ -1052,11 +1360,19 @@ export default function Home() {
               {model.status === 'range' && (
                 <p role="alert">Enter a number from 0 to 55°C.</p>
               )}
-              <Button onClick={() => setDialog(null)}>Done</Button>
+              <Button
+                data-tour="setup-done"
+                onClick={() => {
+                  if (setupMatches) markTutorial('setup');
+                  setDialog(null);
+                }}
+              >
+                Done
+              </Button>
             </div>
           ) : dialog === 'readings' ? (
             <>
-              <div className="gauges">
+              <div className="gauges" data-tour="gauges">
                 <Gauge
                   name="Condenser"
                   symbol="Pdis"

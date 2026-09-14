@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -38,6 +38,9 @@ export function Equipment({
   mode,
   focusRequest,
   inspected,
+  receiverOpen,
+  onReceiverOpenChange,
+  tutorial,
 }: {
   valves: Record<Valve, boolean>;
   selected: Valve | null;
@@ -47,10 +50,13 @@ export function Equipment({
   mode?: string;
   focusRequest: number;
   inspected: boolean;
+  receiverOpen: boolean;
+  onReceiverOpenChange: (open: boolean) => void;
+  tutorial?: ReactNode;
 }) {
   const viewport = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
-  const [receiverOpen, setReceiverOpen] = useState(false);
+  const setReceiverOpen = onReceiverOpenChange;
   const [fit, setFit] = useState({ width: 340, height: 538 });
   const drag = useRef<{
     x: number;
@@ -126,7 +132,7 @@ export function Equipment({
           Select a dot to inspect a component. Numbered dots open a closer view.
         </p>
       )}
-      <div className="zoom-toolbar">
+      <div className="zoom-toolbar" data-tour="zoom">
         <Button
           variant="ghost"
           aria-pressed={showLabels}
@@ -214,6 +220,7 @@ export function Equipment({
               group.members.length > 1 ? (
                 <button
                   key={group.members.map((p) => p.id).join('-')}
+                  data-tour-valves={group.members.map((p) => p.id).join(' ')}
                   className={
                     'component-marker marker-group ' +
                     (showLabels ? 'show-label ' : '') +
@@ -256,6 +263,7 @@ export function Equipment({
                   <button
                     key={id}
                     data-valve={id}
+                    data-tour-valves={id}
                     className={
                       'component-marker ' +
                       (selected === id ? 'is-selected ' : '') +
@@ -306,6 +314,7 @@ export function Equipment({
             LRI sits behind LRK in the front view. This angle shows all three.
             Select a valve to inspect it.
           </DialogDescription>
+          {tutorial}
           <div className="receiver-photo">
             <img
               src="/assets/receiver-valves.jpg"
@@ -316,6 +325,7 @@ export function Equipment({
             {receiverPins.map(({ id, x, y }) => (
               <button
                 key={id}
+                data-tour-receiver={id}
                 className={
                   'component-marker show-label ' +
                   (selected === id ? 'is-selected' : '')
