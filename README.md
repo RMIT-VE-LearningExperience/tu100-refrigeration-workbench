@@ -93,3 +93,11 @@ Amber outlines identify the actual controls without a tutorial dimming layer. Th
 This is practice using the digital twin, not a validated physical startup or shutdown procedure. Students follow their teacher’s procedure on the real machine. Equations and supported valve configurations are unchanged.
 
 Validation: 18 automated tests and TypeScript pass; complete desktop and 390×844 walkthroughs, 320px layout, receiver selection, multiple-valve Undo, wrong-dialog recovery, stopped-model recovery, keyboard Done/Escape, skip-all and practical handoff checked in Chrome. Screenshots and reviewer findings are in `../work/machine-tutorial-review/`. New tutorial files pass lint; the repository-wide lint command still reports existing issues in older components/tests. Instructor acceptance and observed student testing remain outstanding.
+
+### Automatic start and spotlight
+
+The machine tutorial now starts automatically on the first visit in each browser. A separate `tu100-machine-tutorial-seen-v1` preference prevents repeat launches on refresh; lesson answers and progress are preserved. If storage is blocked, a memory fallback prevents repeated launches during the current page session. Students can exit immediately and replay from the header.
+
+A dark, non-intercepting SVG mask leaves the coach, current controls and necessary reading context clear. Cutouts follow scrolling, zoom, resized targets and dialog transitions, respect scroll-container and sticky-header boundaries, and combine without darkening overlapping areas. Setup fields, their labels, the selected temperature explanation/continuation and glass-tube illustration stay readable. Completion, Exit and section changes remove the mask and outlines. Coach/photo resize updates are deferred to animation frames to avoid resize-observer feedback loops.
+
+Validation now includes 20 passing tests, TypeScript, production build and lint for the tutorial modules. Desktop and mobile browser checks cover first-visit launch, refresh after completion, manual replay, complete walkthroughs, editable fields, keyboard Done/Escape, 320px readings, photo zoom, scroll clipping and mask cleanup. Final critic review found no remaining blocker. Evidence is in `../work/tutorial-spotlight-review/`.

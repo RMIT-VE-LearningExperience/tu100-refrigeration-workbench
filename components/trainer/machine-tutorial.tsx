@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { ArrowRight, Check, LocateFixed, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MACHINE_STEPS, type MachineProgress } from '@/lib/machine-tutorial';
+import { TutorialSpotlight } from './tutorial-spotlight';
 
 export function MachineTutorial({
   progress,
@@ -41,30 +42,6 @@ export function MachineTutorial({
     heading.current?.focus({ preventScroll: true });
   }, [progress.step]);
   useEffect(() => {
-    let highlighted: HTMLElement[] = [];
-    function update() {
-      highlighted.forEach((el) => el.classList.remove('machine-target'));
-      const scope = embedded
-        ? (panel.current?.closest('[data-slot="dialog-content"]') ?? document)
-        : document;
-      highlighted = selector
-        ? Array.from(scope.querySelectorAll<HTMLElement>(selector)).filter(
-            (el) => el.getClientRects().length > 0,
-          )
-        : [];
-      highlighted.forEach((el) => el.classList.add('machine-target'));
-    }
-    update();
-    const observer = new MutationObserver(update);
-    observer.observe(document.body, { childList: true, subtree: true });
-    window.addEventListener('resize', update);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('resize', update);
-      highlighted.forEach((el) => el.classList.remove('machine-target'));
-    };
-  }, [selector, embedded]);
-  useEffect(() => {
     if (embedded) return;
     const escape = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && !event.defaultPrevented) onClose();
@@ -76,7 +53,9 @@ export function MachineTutorial({
     const header = document.querySelector<HTMLElement>('.calm-header');
     const root = document.querySelector<HTMLElement>('main.calm');
     if (!header || !root || !panel.current || embedded) return;
+    let frame = 0;
     const measure = () => {
+      frame = 0;
       root.style.setProperty(
         '--machine-header-height',
         `${header.offsetHeight}px`,
@@ -86,11 +65,16 @@ export function MachineTutorial({
         `${panel.current?.offsetHeight ?? 0}px`,
       );
     };
-    const observer = new ResizeObserver(measure);
+    const observer = new ResizeObserver(() => {
+      if (!frame) frame = requestAnimationFrame(measure);
+    });
     observer.observe(header);
     observer.observe(panel.current);
     measure();
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
   }, [embedded]);
   return (
     <section
@@ -98,6 +82,13 @@ export function MachineTutorial({
       className={'machine-coach ' + (embedded ? 'is-embedded' : 'is-workspace')}
       aria-label="Guided machine tutorial"
     >
+      <TutorialSpotlight
+        panel={panel}
+        selector={selector}
+        embedded={embedded}
+        step={progress.step}
+        enabled={!complete}
+      />
       <div className="machine-coach-copy">
         <p className="machine-coach-progress">
           <span className="machine-ring-key" aria-hidden="true" />

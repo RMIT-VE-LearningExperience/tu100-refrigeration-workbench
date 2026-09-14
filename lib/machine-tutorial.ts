@@ -10,6 +10,25 @@ export const MACHINE_STEPS = [
   'Stop and take it to class',
 ] as const;
 
+export const MACHINE_TUTORIAL_VISIT_KEY = 'tu100-machine-tutorial-seen-v1';
+
+// A page-session fallback also prevents repeated launches when storage is denied.
+export function createMachineTutorialVisit() {
+  let seenInSession = false;
+  return (getStorage: () => Pick<Storage, 'getItem' | 'setItem'>) => {
+    if (seenInSession) return false;
+    seenInSession = true;
+    try {
+      const storage = getStorage();
+      if (storage.getItem(MACHINE_TUTORIAL_VISIT_KEY) === '1') return false;
+      storage.setItem(MACHINE_TUTORIAL_VISIT_KEY, '1');
+    } catch {
+      // The tutorial still works when browser storage is unavailable.
+    }
+    return true;
+  };
+}
+
 export type MachineEvent =
   | 'hp1'
   | 'receiver'

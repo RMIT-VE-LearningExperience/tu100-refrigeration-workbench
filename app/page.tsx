@@ -10,6 +10,7 @@ import {
   recordMachineEvent,
   advanceMachineTutorial,
   machineStepDone,
+  createMachineTutorialVisit,
   type MachineProgress,
   type MachineEvent,
 } from '@/lib/machine-tutorial';
@@ -395,6 +396,8 @@ function PHChart({
   );
 }
 
+const claimTutorialVisit = createMachineTutorialVisit();
+
 export default function Home() {
   const [valves, setValves] = useState(initialValves);
   const [r, setR] = useState<Refrigerant>('R134a');
@@ -421,6 +424,11 @@ export default function Home() {
   const [undo, setUndo] = useState<ReturnType<typeof initialValves> | null>(
     null,
   );
+  useEffect(() => {
+    if (!claimTutorialVisit(() => window.localStorage)) return;
+    setTutorial(newMachineTutorial());
+    setSurface('explore');
+  }, []);
   const focusDestination = () =>
     requestAnimationFrame(() => {
       const heading = document.querySelector<HTMLElement>('main h2, main h3');

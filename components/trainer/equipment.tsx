@@ -67,15 +67,26 @@ export function Equipment({
   useEffect(() => {
     const el = viewport.current;
     if (!el) return;
+    let frame = 0;
     const observer = new ResizeObserver(() => {
-      const width = Math.min(
-        el.clientWidth - 16,
-        ((el.clientHeight - 16) * 2400) / 3800,
-      );
-      setFit({ width, height: (width * 3800) / 2400 });
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const width = Math.min(
+          el.clientWidth - 16,
+          ((el.clientHeight - 16) * 2400) / 3800,
+        );
+        setFit((current) =>
+          current.width === width
+            ? current
+            : { width, height: (width * 3800) / 2400 },
+        );
+      });
     });
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
   }, []);
   function scale(next: number, target?: [number, number], focusId?: string) {
     const el = viewport.current;
@@ -347,6 +358,7 @@ export function Equipment({
             {receiverPins.map(({ id, name }) => (
               <Button
                 key={id}
+                data-tour-receiver={id}
                 variant="outline"
                 aria-pressed={selected === id}
                 onClick={() => inspectReceiver(id)}

@@ -6,10 +6,46 @@ import {
   advanceMachineTutorial,
   machineStepDone,
   MACHINE_STEPS,
+  MACHINE_TUTORIAL_VISIT_KEY,
+  createMachineTutorialVisit,
 } from '../lib/machine-tutorial.ts';
 
 const stopped = { running: false, hasReadings: false, setupMatches: true };
 const live = { running: true, hasReadings: true, setupMatches: true };
+
+void test('First-visit launch is remembered separately from lesson progress and survives a new page session', () => {
+  const saved = new Map([['lesson-progress', 'existing answers']]);
+  const storage = {
+    getItem: (key: string) => saved.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      saved.set(key, value);
+    },
+  };
+  const visit = createMachineTutorialVisit();
+  assert.equal(
+    visit(() => storage),
+    true,
+  );
+  assert.equal(
+    visit(() => storage),
+    false,
+  );
+  assert.equal(
+    createMachineTutorialVisit()(() => storage),
+    false,
+  );
+  assert.equal(saved.get(MACHINE_TUTORIAL_VISIT_KEY), '1');
+  assert.equal(saved.get('lesson-progress'), 'existing answers');
+});
+
+void test('Denied browser storage still launches once without repeated resets in the page session', () => {
+  const unavailable = () => {
+    throw new Error('Storage denied');
+  };
+  const visit = createMachineTutorialVisit();
+  assert.equal(visit(unavailable), true);
+  assert.equal(visit(unavailable), false);
+});
 
 void test('Machine walkthrough requires the intended actions and does not credit unrelated earlier clicks', () => {
   let p = newMachineTutorial();

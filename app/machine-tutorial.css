@@ -1,3 +1,10 @@
+.machine-shade {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 70;
+  pointer-events: none;
+}
 .machine-coach {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -101,6 +108,11 @@
       24px
   );
   scroll-margin-bottom: 24px;
+}
+.machine-target .marker-caption {
+  display: block;
+  opacity: 1;
+  visibility: visible;
 }
 input.machine-target,
 select.machine-target {
