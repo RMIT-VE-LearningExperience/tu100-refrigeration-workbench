@@ -100,6 +100,8 @@ function CycleActivity({
   const active = matching && !!model.values;
   const stage = STAGES.find((s) => s.id === progress.selected);
   const question = QUESTIONS[progress.step];
+  const currentTarget =
+    progress.started && !progress.completed ? question.target : null;
   const start = () => {
     onRestore();
     setProgress((p) => ({
@@ -324,10 +326,12 @@ function CycleActivity({
                       variant="outline"
                       className={
                         'learn-photo-pin ' +
+                        (s.id === currentTarget ? 'is-current-step ' : '') +
                         (s.id === progress.selected ? 'is-selected' : '')
                       }
                       style={{ left: `${s.x}%`, top: `${s.y}%` }}
                       aria-label={`Select ${s.name}`}
+                      aria-current={s.id === currentTarget ? 'step' : undefined}
                       aria-pressed={s.id === progress.selected}
                       onClick={() => select(s.id)}
                     >
@@ -348,6 +352,12 @@ function CycleActivity({
               )}
             </div>
           </div>
+          {currentTarget && (
+            <p className="learn-step-key">
+              <span aria-hidden="true" /> Ring = this step’s component. Select
+              it to see what it does.
+            </p>
+          )}
           <nav
             className="learn-cycle"
             aria-label="Refrigerant cycle components"
@@ -356,6 +366,10 @@ function CycleActivity({
               <div className="learn-cycle-item" key={s.id}>
                 <Button
                   variant="ghost"
+                  className={
+                    s.id === currentTarget ? 'is-current-step' : undefined
+                  }
+                  aria-current={s.id === currentTarget ? 'step' : undefined}
                   aria-pressed={s.id === progress.selected}
                   onClick={() => select(s.id)}
                 >

@@ -17,7 +17,7 @@ Six model tests exhaust all 4096 valve states, verify reference patterns, check 
 - Local-unit calibration and teaching-team acceptance remain outstanding. No live telemetry, startup/equalisation transients, faults, charge model, mass-flow model, compressor map or fan-speed simulation.
 - R454C p–h plotting awaits validated mixture enthalpy data. Its pressure and temperature readouts work; feature availability is controlled in `SETTINGS.enableR454C`.
 - The circuit tab displays the supplied cooling schematic and selected flow sequence; it is not a fully redrawn dynamically rerouted circuit.
-- The photo hotspots cover visible mapped valves; all 12 controls, including the receiver bypass, are available in the valve panel. Exact labels and measurement locations still need a teacher walkthrough.
+- All 12 valve controls have photo targets. Receiver labels were checked against the supplied close-ups: LRB is the left base valve, LRI is partly behind LRK in the front view, and LRK is frontmost. A separate receiver close-up makes all three selectable. Measurement locations and teaching-team acceptance still need a teacher walkthrough.
 - Observation-tube operating videos and the optimised 3D reconstruction are not yet integrated. Do not mistake the photo view for a completed 3D model.
 - Airflow is marked unvalidated instead of presenting the brief's tentative 6 L/min as a measurement.
 - Alternative refrigerants are simulated comparisons, not statements of compatibility with this R134a trainer.
@@ -49,7 +49,9 @@ First visit offers Explore freely or Guided practice. Guided steps appear inside
 
 ## Interactive photo affordances
 
-The reversing valves now have visible markers by default. Crowded 44px targets form a group marker that zooms into the area, then reveals individually selectable valves. Hover and keyboard focus reveal names; selection highlights the component without changing valve state. The first-use image instruction disappears after a successful component selection. The inspector offers Zoom to component for mapped valves, while Fit restores the whole unit. Labels reveals the remaining mapped valves; the component list remains available for all valves, including the unmapped LRB. Photo markers for observation tubes remain deferred until their positions are verified.
+All mapped valve targets are available by default; Labels controls names independently. Crowded targets form a group marker that opens a closer view. The receiver group opens an alternate-angle photograph because LRI is obscured by LRK in the main image. Both photo markers and large labelled buttons select LRB, LRI or LRK without operating the valve. The inspector offers the receiver close-up for these three valves and photo zoom for other valves. Hover and keyboard focus reveal names; Fit restores the whole unit. Photo markers for observation tubes remain deferred until their positions are verified.
+
+Receiver mapping evidence: supplied photos `0H5A3431.CR3` and `0H5A3442.CR3` clearly label all three handwheels. `public/assets/receiver-valves.jpg` is an unannotated crop of the camera JPEG from `0H5A3442.CR3` (original crop: x2900,y2600 to x4400,y3550). The left base target previously labelled LRI is corrected to LRB. The existing LRK target remains on the front handwheel; LRI is separately represented behind it and accessible in the close-up.
 
 Browser checks cover desktop/mobile appearance, group expansion, keyboard focus transfer, selection without stopping the simulation, and component zoom. Marker grouping tests cover whole-unit and enlarged scales and target preservation.
 

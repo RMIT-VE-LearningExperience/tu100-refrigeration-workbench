@@ -395,7 +395,7 @@ export default function Home() {
   const [selected, setSelected] = useState<Valve | null>(null);
   const [focusRequest, setFocusRequest] = useState(0);
   const [inspected, setInspected] = useState(false);
-  const [hotspots, setHotspots] = useState(false);
+  const [showLabels, setShowLabels] = useState(false);
   const [offline, setOffline] = useState('');
   const [surface, setSurface] = useState<'learn' | 'practical' | 'explore'>(
     'learn',
@@ -661,18 +661,19 @@ export default function Home() {
               {valves[selected] ? 'Close' : 'Open'} {selected}
             </Button>
           </div>
-          {selected !== 'LRB' && (
-            <button
-              className="calm-text-button"
-              onClick={() => {
-                setView('equipment');
-                setFocusRequest((n) => n + 1);
-                setSheetOpen(false);
-              }}
-            >
-              Zoom to component <ArrowUpRight size={14} />
-            </button>
-          )}
+          <button
+            className="calm-text-button"
+            onClick={() => {
+              setView('equipment');
+              setFocusRequest((n) => n + 1);
+              setSheetOpen(false);
+            }}
+          >
+            {selected.startsWith('LR')
+              ? 'View receiver close-up'
+              : 'Zoom to component'}{' '}
+            <ArrowUpRight size={14} />
+          </button>
           <p className="calm-small">Operating a valve stops the simulation.</p>
           <p className="calm-kicker">RELATED MEASUREMENTS</p>
           {temperatureRows(related)}
@@ -908,8 +909,8 @@ export default function Home() {
                   valves={valves}
                   selected={selected}
                   onSelect={selectValve}
-                  hotspots={hotspots}
-                  onToggleHotspots={() => setHotspots(!hotspots)}
+                  showLabels={showLabels}
+                  onToggleLabels={() => setShowLabels(!showLabels)}
                   mode={model.config?.mode}
                 />
               ) : view === 'tubes' ? (

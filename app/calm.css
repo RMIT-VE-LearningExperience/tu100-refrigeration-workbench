@@ -792,10 +792,64 @@
   display: none;
   pointer-events: none;
 }
-.marker-group .marker-caption,
 .is-selected .marker-caption,
 .show-label .marker-caption {
   display: block;
+}
+.receiver-dialog {
+  width: calc(100vw - 32px);
+  max-width: 760px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  color: #203d2c;
+  background: #fbfdf8;
+}
+.receiver-dialog [data-slot='dialog-title'] {
+  padding-right: 36px;
+  font-size: 22px;
+}
+.receiver-dialog [data-slot='dialog-description'] {
+  font-size: 16px;
+  line-height: 1.5;
+}
+.receiver-photo {
+  position: relative;
+}
+.receiver-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+.receiver-photo .component-marker:focus-visible {
+  outline: 3px solid #087253;
+  outline-offset: 2px;
+  border-radius: 50%;
+}
+.receiver-photo .marker-caption {
+  font-size: 14px;
+}
+.receiver-choices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.receiver-choices button {
+  height: auto;
+  min-height: 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+}
+@media (max-width: 400px) {
+  .receiver-photo .component-marker {
+    width: 32px;
+    height: 32px;
+  }
+  .receiver-photo .marker-caption {
+    top: 30px;
+  }
 }
 .marker-tooltip {
   position: absolute;

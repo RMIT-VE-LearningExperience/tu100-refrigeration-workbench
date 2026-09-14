@@ -913,3 +913,30 @@
  .calm .learn-pickerbar .new-learner{margin:0;min-height:44px}
  .learner-reset-notice{font-size:13px}
 }
+
+/* A lesson target is distinct from the component the student has selected. */
+.learn .learn-photo-pin.is-current-step {
+  outline: 3px solid #a85b12;
+  outline-offset: 5px;
+}
+.learn-cycle button.is-current-step {
+  outline: 2px solid #a85b12;
+  outline-offset: 2px;
+}
+.learn-step-key {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 16px 0;
+  margin: 0;
+  color: #53604f;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.learn-step-key > span {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 13px;
+  border: 2px solid #a85b12;
+  border-radius: 50%;
+}

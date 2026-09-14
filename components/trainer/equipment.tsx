@@ -1,9 +1,15 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { clusterMarkers } from '@/lib/markers';
 import { VALVE_NAMES, type Valve } from '@/lib/model';
-const pins: Partial<Record<Valve, [number, number]>> = {
+const pins: Record<Valve, [number, number]> = {
   CTV: [61.8, 28.7],
   TXV: [85.5, 28.7],
   HP1: [73.8, 44],
@@ -13,15 +19,22 @@ const pins: Partial<Record<Valve, [number, number]>> = {
   ACI: [61.8, 66.5],
   ACO: [85.5, 66.5],
   ACB: [85.5, 60.5],
-  LRI: [38, 89.5],
-  LRK: [44, 89.5],
+  // Receiver labels verified against source photos 0H5A3431 and 0H5A3442.
+  LRB: [38.4, 89.2],
+  LRI: [44.4, 88.6],
+  LRK: [44.5, 89.8],
 };
+const receiverPins = [
+  { id: 'LRB', name: 'Bypass', x: 18.27, y: 14.84 },
+  { id: 'LRI', name: 'Inlet', x: 44.67, y: 24.21 },
+  { id: 'LRK', name: 'King valve', x: 60, y: 44.42 },
+] as const;
 export function Equipment({
   valves,
   selected,
   onSelect,
-  hotspots,
-  onToggleHotspots,
+  showLabels,
+  onToggleLabels,
   mode,
   focusRequest,
   inspected,
@@ -29,14 +42,15 @@ export function Equipment({
   valves: Record<Valve, boolean>;
   selected: Valve | null;
   onSelect: (v: Valve) => void;
-  hotspots: boolean;
-  onToggleHotspots: () => void;
+  showLabels: boolean;
+  onToggleLabels: () => void;
   mode?: string;
   focusRequest: number;
   inspected: boolean;
 }) {
   const viewport = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
+  const [receiverOpen, setReceiverOpen] = useState(false);
   const [fit, setFit] = useState({ width: 340, height: 538 });
   const drag = useRef<{
     x: number;
@@ -95,26 +109,30 @@ export function Equipment({
     });
   }
   useEffect(() => {
-    if (focusRequest && selected && pins[selected]) scale(3, pins[selected]);
+    if (!focusRequest || !selected) return;
+    if (selected.startsWith('LR')) setReceiverOpen(true);
+    else scale(3, pins[selected]);
   }, [focusRequest]);
-  const targets = Object.entries(pins)
-    .filter(([id]) => hotspots || id.startsWith('HP') || id === selected)
-    .map(([id, [x, y]]) => ({ id, x, y }));
+  function inspectReceiver(id: Valve) {
+    setReceiverOpen(false);
+    onSelect(id);
+  }
+  const targets = Object.entries(pins).map(([id, [x, y]]) => ({ id, x, y }));
   const clusters = clusterMarkers(targets, fit.width * zoom, fit.height * zoom);
   return (
     <>
       {!inspected && (
         <p className="equipment-instruction">
-          Select a marked component to inspect it.
+          Select a dot to inspect a component. Numbered dots open a closer view.
         </p>
       )}
       <div className="zoom-toolbar">
         <Button
           variant="ghost"
-          aria-pressed={hotspots}
-          onClick={onToggleHotspots}
+          aria-pressed={showLabels}
+          onClick={onToggleLabels}
         >
-          Labels {hotspots ? 'on' : 'off'}
+          Labels {showLabels ? 'on' : 'off'}
         </Button>
         <div>
           <Button
@@ -198,28 +216,39 @@ export function Equipment({
                   key={group.members.map((p) => p.id).join('-')}
                   className={
                     'component-marker marker-group ' +
+                    (showLabels ? 'show-label ' : '') +
                     (group.members.some((p) => p.id === selected)
                       ? 'is-selected'
                       : '')
                   }
                   style={{ left: `${group.x}%`, top: `${group.y}%` }}
-                  aria-label={`Zoom to ${group.members.map((p) => p.id).join(', ')}`}
-                  onClick={() =>
+                  aria-label={
+                    group.members.every((p) => p.id.startsWith('LR'))
+                      ? 'Inspect receiver valves: LRB, LRI, LRK'
+                      : `Zoom to ${group.members.map((p) => p.id).join(', ')}`
+                  }
+                  onClick={() => {
+                    if (group.members.every((p) => p.id.startsWith('LR'))) {
+                      setReceiverOpen(true);
+                      return;
+                    }
                     scale(
                       Math.min(6, zoom + 1),
                       [group.x, group.y],
                       group.members[0].id,
-                    )
-                  }
+                    );
+                  }}
                 >
                   <span className="marker-dot">{group.members.length}</span>
                   <span className="marker-caption">
                     {group.members.every((p) => p.id.startsWith('HP'))
                       ? 'Reversing valves'
-                      : 'Valve group'}
+                      : group.members.every((p) => p.id.startsWith('LR'))
+                        ? 'Receiver valves'
+                        : 'Valve group'}
                   </span>
                   <span className="marker-tooltip">
-                    Zoom in to select a valve
+                    Open a closer view to select a valve
                   </span>
                 </button>
               ) : (
@@ -230,7 +259,7 @@ export function Equipment({
                     className={
                       'component-marker ' +
                       (selected === id ? 'is-selected ' : '') +
-                      (hotspots ? 'show-label' : '')
+                      (showLabels ? 'show-label' : '')
                     }
                     style={{ left: `${x}%`, top: `${y}%` }}
                     onClick={() => onSelect(id as Valve)}
@@ -246,7 +275,7 @@ export function Equipment({
                 ))
               ),
             )}
-            {hotspots && (
+            {showLabels && (
               <>
                 <span className="coil-label top-coil">
                   {mode
@@ -270,6 +299,55 @@ export function Equipment({
       <p className="photo-caption">
         RMIT unit · Photo reference · Scroll or drag to pan when enlarged
       </p>
+      <Dialog open={receiverOpen} onOpenChange={setReceiverOpen}>
+        <DialogContent className="receiver-dialog">
+          <DialogTitle>Receiver valves</DialogTitle>
+          <DialogDescription>
+            LRI sits behind LRK in the front view. This angle shows all three.
+            Select a valve to inspect it.
+          </DialogDescription>
+          <div className="receiver-photo">
+            <img
+              src="/assets/receiver-valves.jpg"
+              width="1500"
+              height="950"
+              alt="Receiver close-up: LRB on the left, LRI in the middle, and LRK at the front right."
+            />
+            {receiverPins.map(({ id, x, y }) => (
+              <button
+                key={id}
+                className={
+                  'component-marker show-label ' +
+                  (selected === id ? 'is-selected' : '')
+                }
+                style={{ left: `${x}%`, top: `${y}%` }}
+                aria-label={`Inspect ${id} · ${VALVE_NAMES[id]}`}
+                aria-pressed={selected === id}
+                onClick={() => inspectReceiver(id)}
+              >
+                <span className="marker-dot" />
+                <span className="marker-caption">{id}</span>
+              </button>
+            ))}
+          </div>
+          <div
+            className="receiver-choices"
+            aria-label="Choose a receiver valve"
+          >
+            {receiverPins.map(({ id, name }) => (
+              <Button
+                key={id}
+                variant="outline"
+                aria-pressed={selected === id}
+                onClick={() => inspectReceiver(id)}
+              >
+                <strong>{id}</strong>
+                <span>{name}</span>
+              </Button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
