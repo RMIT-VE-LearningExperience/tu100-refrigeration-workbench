@@ -1,0 +1,655 @@
+{
+  "$comment": "Single source of truth for the TU-100 twin geometry. Percent coordinates are of the front photo (x across 0-100, y down 0-100). d is distance in metres in front of the panel face. Read by design/3d/build-tu100.py (Blender) and lib/twin.ts (flow overlay, labels, cameras). Dimensions marked verify in refs/tu100-unit.md.",
+  "panel": {
+    "width": 0.876,
+    "height": 1.39,
+    "bottom": 0.58,
+    "thickness": 0.0064,
+    "depth": 0.457
+  },
+  "pipe": {
+    "radius": 0.00475,
+    "horizontal": 0.035,
+    "vertical": 0.062,
+    "jog": 0.02
+  },
+  "coils": [
+    {
+      "id": "upper",
+      "cx": 28,
+      "cy": 17.5,
+      "width": 0.25,
+      "height": 0.21,
+      "thickness": 0.05,
+      "standoff": 0.055,
+      "rows": 8,
+      "rowTop": 12,
+      "rowBottom": 24,
+      "left": 13,
+      "right": 43
+    },
+    {
+      "id": "lower",
+      "cx": 28,
+      "cy": 67.5,
+      "width": 0.25,
+      "height": 0.21,
+      "thickness": 0.05,
+      "standoff": 0.055,
+      "rows": 8,
+      "rowTop": 61,
+      "rowBottom": 74,
+      "left": 13,
+      "right": 43
+    }
+  ],
+  "tubes": [
+    {
+      "id": "upper_top",
+      "y": 6,
+      "x1": 15,
+      "x2": 41,
+      "d": 0.05
+    },
+    {
+      "id": "upper_bottom",
+      "y": 28.8,
+      "x1": 15,
+      "x2": 42,
+      "d": 0.05
+    },
+    {
+      "id": "lower_top",
+      "y": 56,
+      "x1": 15,
+      "x2": 42,
+      "d": 0.05
+    },
+    {
+      "id": "lower_bottom",
+      "y": 79,
+      "x1": 15,
+      "x2": 42,
+      "d": 0.05
+    }
+  ],
+  "trays": [
+    {
+      "id": "upper",
+      "x1": 4,
+      "x2": 50,
+      "y": 30.6,
+      "height": 0.028,
+      "depth": 0.09,
+      "label": "EVAPORATOR",
+      "labelColor": "blue"
+    },
+    {
+      "id": "lower",
+      "x1": 4,
+      "x2": 50,
+      "y": 81,
+      "height": 0.028,
+      "depth": 0.09,
+      "label": "CONDENSER",
+      "labelColor": "red"
+    }
+  ],
+  "gauges": [
+    {
+      "id": "evap",
+      "x": 46,
+      "stemY1": 6,
+      "stemY2": 3,
+      "faceY": 1,
+      "reading": "Pevap",
+      "max": 1800,
+      "name": "Evaporator pressure"
+    },
+    {
+      "id": "cond",
+      "x": 46,
+      "stemY1": 56,
+      "stemY2": 53,
+      "faceY": 50.5,
+      "reading": "Pdis",
+      "max": 3500,
+      "name": "Condenser pressure"
+    },
+    {
+      "id": "suc",
+      "x": 92,
+      "stemY1": 60.5,
+      "stemY2": 57.5,
+      "faceY": 55,
+      "reading": "Psuc",
+      "max": 1800,
+      "name": "Suction pressure"
+    }
+  ],
+  "valves": [
+    {
+      "id": "HP1",
+      "x": 73.8,
+      "y": 44,
+      "axis": "x"
+    },
+    {
+      "id": "HP2",
+      "x": 85.5,
+      "y": 44,
+      "axis": "x"
+    },
+    {
+      "id": "HP3",
+      "x": 73.8,
+      "y": 50.3,
+      "axis": "x"
+    },
+    {
+      "id": "HP4",
+      "x": 85.5,
+      "y": 50.3,
+      "axis": "x"
+    },
+    {
+      "id": "CTV",
+      "x": 61.8,
+      "y": 28.7,
+      "axis": "z"
+    },
+    {
+      "id": "AXV",
+      "x": 73.5,
+      "y": 28.7,
+      "axis": "z",
+      "static": true
+    },
+    {
+      "id": "TXV",
+      "x": 85.5,
+      "y": 28.7,
+      "axis": "z"
+    },
+    {
+      "id": "ACI",
+      "x": 63.5,
+      "y": 66.5,
+      "axis": "x"
+    },
+    {
+      "id": "ACO",
+      "x": 85.5,
+      "y": 66.5,
+      "axis": "x"
+    },
+    {
+      "id": "ACB",
+      "x": 85.5,
+      "y": 60.5,
+      "axis": "x"
+    },
+    {
+      "id": "LRB",
+      "x": 38,
+      "y": 92.8,
+      "d": 0.2,
+      "axis": "d",
+      "bench": true
+    },
+    {
+      "id": "LRI",
+      "x": 45,
+      "y": 92.8,
+      "d": 0.17,
+      "axis": "x",
+      "bench": true
+    },
+    {
+      "id": "LRK",
+      "x": 47,
+      "y": 92.8,
+      "d": 0.3,
+      "axis": "x",
+      "bench": true
+    }
+  ],
+  "vessels": [
+    {
+      "id": "receiver",
+      "x": 51,
+      "zBottom": 0.58,
+      "height": 0.26,
+      "radius": 0.05,
+      "d": 0.17,
+      "name": "Receiver"
+    },
+    {
+      "id": "accumulator",
+      "x": 67,
+      "zBottom": 0.776,
+      "height": 0.2,
+      "radius": 0.042,
+      "d": 0.06,
+      "name": "Accumulator"
+    },
+    {
+      "id": "compressor",
+      "x": 90,
+      "zBottom": 0.58,
+      "height": 0.28,
+      "radius": 0.085,
+      "d": 0.2,
+      "name": "Compressor"
+    },
+    {
+      "id": "dryer",
+      "x": 59,
+      "zBottom": 1.224,
+      "height": 0.09,
+      "radius": 0.022,
+      "d": 0.05,
+      "name": "Filter-dryer"
+    }
+  ],
+  "fittings": [
+    {
+      "id": "sightglass",
+      "x": 59,
+      "y": 42,
+      "radius": 0.013,
+      "height": 0.03,
+      "d": 0.062
+    },
+    {
+      "id": "txv_body",
+      "x": 85.5,
+      "y": 21,
+      "radius": 0.016,
+      "height": 0.055,
+      "disc": 0.027,
+      "discY": 18.5,
+      "d": 0.062,
+      "name": "Thermostatic expansion valve"
+    },
+    {
+      "id": "axv_body",
+      "x": 73.5,
+      "y": 20.5,
+      "radius": 0.015,
+      "height": 0.055,
+      "d": 0.062,
+      "name": "Automatic expansion valve"
+    },
+    {
+      "id": "captube",
+      "x": 71,
+      "y": 9,
+      "radius": 0.025,
+      "turns": 3,
+      "d": 0.045,
+      "name": "Capillary tube"
+    },
+    {
+      "id": "sleeve",
+      "x1": 52,
+      "x2": 64,
+      "y": 6,
+      "radius": 0.013,
+      "d": 0.035,
+      "name": "Insulated suction line with TXV bulb"
+    }
+  ],
+  "boxes": [
+    {
+      "id": "nameplate",
+      "cx": 58,
+      "cy": 10.8,
+      "w": 0.14,
+      "h": 0.085,
+      "t": 0.004,
+      "color": "plate"
+    },
+    {
+      "id": "controlbox",
+      "cx": 19.5,
+      "cy": 45,
+      "w": 0.17,
+      "h": 0.19,
+      "t": 0.07,
+      "color": "steel"
+    },
+    {
+      "id": "tcs",
+      "cx": 42.5,
+      "cy": 44.5,
+      "w": 0.075,
+      "h": 0.15,
+      "t": 0.035,
+      "color": "white"
+    },
+    {
+      "id": "probeholder",
+      "cx": 50,
+      "cy": 36,
+      "w": 0.14,
+      "h": 0.025,
+      "t": 0.004,
+      "color": "plate"
+    },
+    {
+      "id": "pressureswitch",
+      "cx": 67,
+      "zBottom": 0.6,
+      "w": 0.09,
+      "h": 0.11,
+      "t": 0.07,
+      "d": 0.24,
+      "color": "beige"
+    }
+  ],
+  "capillary": [
+    [85.5, 18.5],
+    [90, 18.5],
+    [90, 4],
+    [60, 4],
+    [60, 7.5]
+  ],
+  "pipes": [
+    {
+      "id": "collector",
+      "role": "liquid",
+      "pts": [
+        [61.8, 34],
+        [53, 34],
+        [53, 28.8],
+        [42, 28.8],
+        [42, 28.8, 0.05]
+      ]
+    },
+    {
+      "id": "upper_left_in",
+      "role": "coil",
+      "pts": [
+        [15, 28.8, 0.05],
+        [15, 28.8],
+        [7, 28.8],
+        [7, 24],
+        [13, 24],
+        [13, 24, 0.08]
+      ]
+    },
+    {
+      "id": "upper_left_out",
+      "role": "coil",
+      "pts": [
+        [13, 12, 0.08],
+        [13, 12],
+        [7, 12],
+        [7, 6],
+        [15, 6],
+        [15, 6, 0.05]
+      ]
+    },
+    {
+      "id": "upper_trunk",
+      "role": "trunk",
+      "pts": [
+        [41, 6, 0.05],
+        [41, 6],
+        [46, 6],
+        [92, 6],
+        [92, 40],
+        [79.6, 40],
+        [79.6, 44]
+      ]
+    },
+    {
+      "id": "lineA_left",
+      "role": "valve",
+      "pts": [
+        [79.6, 44],
+        [69, 44]
+      ],
+      "valve": "HP1"
+    },
+    {
+      "id": "lineA_right",
+      "role": "valve",
+      "pts": [
+        [79.6, 44],
+        [96, 44]
+      ],
+      "valve": "HP2"
+    },
+    {
+      "id": "lineB_left",
+      "role": "valve",
+      "pts": [
+        [79.6, 50.3],
+        [69, 50.3]
+      ],
+      "valve": "HP3"
+    },
+    {
+      "id": "lineB_right",
+      "role": "valve",
+      "pts": [
+        [79.6, 50.3],
+        [96, 50.3]
+      ],
+      "valve": "HP4"
+    },
+    {
+      "id": "disc_riser",
+      "role": "discharge",
+      "pts": [
+        [93, 80, 0.2],
+        [93, 75.5, 0.2],
+        [93, 75.5, 0.035],
+        [96, 75.5],
+        [96, 50.3],
+        [96, 44]
+      ]
+    },
+    {
+      "id": "lower_trunk",
+      "role": "trunk",
+      "pts": [
+        [79.6, 50.3],
+        [79.6, 54],
+        [46, 54],
+        [46, 56],
+        [42, 56],
+        [42, 56, 0.05]
+      ]
+    },
+    {
+      "id": "lower_left_in",
+      "role": "coil",
+      "pts": [
+        [15, 56, 0.05],
+        [15, 56],
+        [7, 56],
+        [7, 61],
+        [13, 61],
+        [13, 61, 0.08]
+      ]
+    },
+    {
+      "id": "lower_left_out",
+      "role": "coil",
+      "pts": [
+        [13, 74, 0.08],
+        [13, 74],
+        [7, 74],
+        [7, 79],
+        [15, 79],
+        [15, 79, 0.05]
+      ]
+    },
+    {
+      "id": "lower_liquid",
+      "role": "liquid",
+      "pts": [
+        [42, 79, 0.05],
+        [42, 79],
+        [42, 92.8, 0.062],
+        [42, 92.8, 0.1]
+      ]
+    },
+    {
+      "id": "rec_in",
+      "role": "liquid",
+      "pts": [
+        [42, 92.8, 0.1],
+        [42, 92.8, 0.17],
+        [48, 92.8, 0.17],
+        [48, 80.5, 0.17],
+        [51, 80.5, 0.17],
+        [51, 81.5, 0.17]
+      ],
+      "valve": "LRI"
+    },
+    {
+      "id": "rec_out",
+      "role": "liquid",
+      "pts": [
+        [51, 93.5, 0.17],
+        [51, 93.5, 0.3],
+        [42, 93.5, 0.3],
+        [42, 92.8, 0.3]
+      ],
+      "valve": "LRK"
+    },
+    {
+      "id": "rec_bypass",
+      "role": "bypass",
+      "pts": [
+        [42, 92.8, 0.1],
+        [38, 92.8, 0.1],
+        [38, 92.8, 0.3],
+        [42, 92.8, 0.3]
+      ],
+      "valve": "LRB"
+    },
+    {
+      "id": "rec_to_dryer",
+      "role": "liquid",
+      "pts": [
+        [42, 92.8, 0.3],
+        [42, 92.8, 0.36],
+        [59, 92.8, 0.36],
+        [59, 92.8, 0.062],
+        [59, 54]
+      ]
+    },
+    {
+      "id": "dryer_up",
+      "role": "liquid",
+      "pts": [
+        [59, 47.3],
+        [59, 36],
+        [48, 36],
+        [48, 15]
+      ]
+    },
+    {
+      "id": "header",
+      "role": "liquid",
+      "pts": [
+        [48, 15],
+        [85.5, 15]
+      ]
+    },
+    {
+      "id": "ctv_branch",
+      "role": "meter",
+      "pts": [
+        [61.8, 15],
+        [61.8, 34]
+      ],
+      "valve": "CTV"
+    },
+    {
+      "id": "axv_branch",
+      "role": "meter",
+      "pts": [
+        [73.5, 15],
+        [73.5, 34]
+      ],
+      "valve": "AXV"
+    },
+    {
+      "id": "txv_branch",
+      "role": "meter",
+      "pts": [
+        [85.5, 15],
+        [85.5, 34]
+      ],
+      "valve": "TXV"
+    },
+    {
+      "id": "collector_txv",
+      "role": "liquid",
+      "pts": [
+        [85.5, 34],
+        [61.8, 34]
+      ]
+    },
+    {
+      "id": "suc_header",
+      "role": "suction",
+      "pts": [
+        [69, 44],
+        [69, 50.3],
+        [69, 58]
+      ]
+    },
+    {
+      "id": "acc_in",
+      "role": "suction",
+      "pts": [
+        [69, 58],
+        [61, 58],
+        [61, 66.5],
+        [65, 66.5],
+        [65, 71.5]
+      ],
+      "valve": "ACI"
+    },
+    {
+      "id": "acc_out",
+      "role": "suction",
+      "pts": [
+        [69, 71.5],
+        [69, 66.5],
+        [92, 66.5]
+      ],
+      "valve": "ACO"
+    },
+    {
+      "id": "acc_bypass",
+      "role": "bypass",
+      "pts": [
+        [69, 58],
+        [69, 60.5],
+        [92, 60.5],
+        [92, 66.5]
+      ],
+      "valve": "ACB"
+    },
+    {
+      "id": "suc_to_comp",
+      "role": "suction",
+      "pts": [
+        [92, 66.5],
+        [92, 70],
+        [88, 70],
+        [88, 75.5, 0.062],
+        [88, 75.5, 0.2],
+        [88, 80, 0.2]
+      ]
+    }
+  ]
+}

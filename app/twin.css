@@ -1,0 +1,343 @@
+/* 3D twin view: canvas stage, stage bar, labels, coach and cards. Palette follows calm.css; one accent. */
+.twin-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.twin-toolbar {
+  flex-wrap: wrap;
+}
+.twin-theme {
+  position: relative;
+  font-size: 13px;
+}
+.twin-theme > summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 8px;
+  color: #23392c;
+}
+.twin-theme > summary::-webkit-details-marker {
+  display: none;
+}
+.twin-theme > summary:hover {
+  background: #e9eeeb;
+}
+.twin-theme > div {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 20;
+  display: grid;
+  gap: 2px;
+  min-width: 140px;
+  padding: 6px;
+  background: #fcfdf9;
+  border: 1px solid #d7dfd1;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px #1b332b14;
+}
+.twin-theme > div > button {
+  text-align: left;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.twin-theme > div > button[aria-pressed='true'] {
+  background: #e1edde;
+  font-weight: 600;
+}
+.twin-stage-wrap {
+  position: relative;
+  height: calc(100dvh - 72px - 56px - 160px);
+  min-height: 420px;
+  margin: 0 16px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #e9edf1;
+  border: 1px solid #d7dfd1;
+}
+.twin-stage-wrap canvas {
+  display: block;
+  touch-action: none;
+  outline: none;
+}
+.twin-stage-wrap.theme-night {
+  background: #1b2130;
+}
+.twin-stage-wrap.theme-blueprint {
+  background: #1d3b6e;
+}
+.twin-loading {
+  margin: 0;
+  padding: 24px;
+  font-size: 14px;
+  color: #506346;
+}
+.twin-loading-overlay {
+  position: absolute;
+  left: 16px;
+  top: 12px;
+  padding: 8px 12px;
+  background: #fcfdf9ee;
+  border-radius: 8px;
+}
+.twin-fallback {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: 24px;
+  text-align: center;
+  color: #23392c;
+}
+.twin-coach {
+  position: absolute;
+  left: 16px;
+  top: 14px;
+  z-index: 6;
+  max-width: min(360px, calc(100% - 32px));
+  padding: 10px 14px 11px;
+  background: #fcfdf9f0;
+  border-radius: 12px;
+  box-shadow: 0 6px 24px #1b332b14;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #23392c;
+  pointer-events: none;
+}
+.twin-coach strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 2px;
+  color: #176749;
+}
+.theme-night .twin-coach,
+.theme-blueprint .twin-coach {
+  background: #10151fe6;
+  color: #eef2f8;
+}
+.theme-night .twin-coach strong,
+.theme-blueprint .twin-coach strong {
+  color: #8fd6bb;
+}
+.twin-card {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 7;
+  width: min(320px, calc(100% - 32px));
+  padding: 14px 16px 12px;
+  background: #fcfdf9;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px #1b332b1f;
+  color: #23392c;
+  font-size: 14px;
+}
+.twin-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.twin-card-head strong {
+  font-size: 16px;
+  font-weight: 600;
+}
+.twin-card-head button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.twin-card-head button:hover {
+  background: #e9eeeb;
+}
+.twin-card p {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #41584a;
+}
+.twin-card dl {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 8px;
+}
+.twin-card dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+.twin-card dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.twin-card dd small {
+  font-weight: 400;
+  color: #64715e;
+}
+.twin-card > small {
+  font-size: 11px;
+  color: #64715e;
+}
+.twin-legend {
+  position: absolute;
+  left: 16px;
+  bottom: 14px;
+  z-index: 6;
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 10px 12px;
+  list-style: none;
+  background: #fcfdf9e6;
+  border-radius: 10px;
+  font-size: 11px;
+  color: #23392c;
+  pointer-events: none;
+}
+.twin-legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.twin-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid #ffffff;
+}
+.theme-night .twin-legend,
+.theme-blueprint .twin-legend {
+  background: #10151fe0;
+  color: #eef2f8;
+}
+.twin-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #fcfdf9e6;
+  border: 1px solid #c9d6c6;
+  color: #23392c;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+  box-shadow: 0 2px 8px #1b332b1a;
+}
+.twin-label.component {
+  font-weight: 500;
+  background: #176749e6;
+  color: #fff;
+  border-color: #176749;
+}
+.twin-label.is-active {
+  background: #176749;
+  color: #fff;
+  border-color: #0f4d35;
+  font-size: 12px;
+}
+.twin-label small {
+  font-weight: 400;
+  color: inherit;
+  opacity: 0.8;
+}
+.twin-stagebar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 16px 0;
+}
+.twin-stagebar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 0 12px 0 8px;
+  border-radius: 999px;
+  border: 1px solid #d7dfd1;
+  background: #fcfdf9;
+  font-size: 13px;
+  color: #23392c;
+  cursor: pointer;
+}
+.twin-stagebar button:hover {
+  background: #e9eeeb;
+}
+.twin-stagebar button[aria-pressed='true'] {
+  background: #176749;
+  border-color: #176749;
+  color: #fff;
+}
+.twin-stagebar kbd {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: #e9eeeb;
+  color: #23392c;
+  font: 600 11px/1 Arial, Helvetica, sans-serif;
+}
+.twin-stagebar button[aria-pressed='true'] kbd {
+  background: #ffffff33;
+  color: #fff;
+}
+.twin-stagebar .twin-tour {
+  margin-left: auto;
+  padding-left: 12px;
+}
+@media (max-width: 1000px) {
+  .twin-stage-wrap {
+    height: calc(100dvh - 72px - 56px - 200px);
+  }
+}
+@media (max-width: 760px) {
+  .twin-stage-wrap {
+    height: calc(100svh - 300px);
+    min-height: 360px;
+    margin: 0;
+    border-radius: 10px;
+  }
+  .twin-coach {
+    left: 10px;
+    top: 10px;
+    max-width: calc(100% - 20px);
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+  .twin-card {
+    right: 10px;
+    bottom: 10px;
+    width: calc(100% - 20px);
+  }
+  .twin-legend {
+    display: none;
+  }
+  .twin-stagebar {
+    padding: 8px 0 0;
+    gap: 5px;
+  }
+  .twin-stagebar button {
+    min-height: 36px;
+    font-size: 12px;
+    padding-right: 10px;
+  }
+  .twin-stagebar .twin-tour {
+    margin-left: 0;
+  }
+}

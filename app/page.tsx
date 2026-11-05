@@ -3,6 +3,7 @@ import './calm.css';
 import './learn.css';
 import './student.css';
 import './machine-tutorial.css';
+import './twin.css';
 import { MachineTutorial } from '@/components/trainer/machine-tutorial';
 import {
   MACHINE_STEPS,
@@ -26,7 +27,7 @@ import {
   SlidersHorizontal,
   ChevronRight,
 } from 'lucide-react';
-import { ModelPilot } from '@/components/trainer/model-pilot';
+import { TwinView } from '@/components/twin/twin-view';
 import { Equipment } from '@/components/trainer/equipment';
 import { ObservationTubes } from '@/components/trainer/observation-tubes';
 import {
@@ -404,8 +405,8 @@ export default function Home() {
   const [ambient, setAmbient] = useState('25');
   const [running, setRunning] = useState(false);
   const [view, setView] = useState<
-    'equipment' | 'circuit' | 'cycle' | 'tubes' | 'model'
-  >('equipment');
+    'twin' | 'equipment' | 'circuit' | 'cycle' | 'tubes'
+  >('twin');
   const [selected, setSelected] = useState<Valve | null>(null);
   const [focusRequest, setFocusRequest] = useState(0);
   const [inspected, setInspected] = useState(false);
@@ -445,7 +446,7 @@ export default function Home() {
     focusDestination();
   };
   const openSimulation = (next: 'equipment' | 'tubes' = 'equipment') => {
-    setView(next);
+    setView(next === 'equipment' ? 'twin' : next);
     chooseMode(false);
   };
   const chooseMode = (guided: boolean) => {
@@ -678,7 +679,7 @@ export default function Home() {
     setReceiverOpen(false);
     if (next.step >= MACHINE_STEPS.length) {
       setRunning(false);
-      setView('equipment');
+      setView('twin');
       setSheetOpen(false);
     } else if (next.step < 7) {
       setView('equipment');
@@ -695,6 +696,7 @@ export default function Home() {
     setTutorial(null);
     setDialog(null);
     setReceiverOpen(false);
+    setView('twin');
     requestAnimationFrame(() =>
       document
         .querySelector<HTMLButtonElement>('[data-tour="launch"]')
@@ -940,14 +942,16 @@ export default function Home() {
           <button
             className="calm-text-button"
             onClick={() => {
-              setView('equipment');
+              if (view !== 'twin') setView('equipment');
               setFocusRequest((n) => n + 1);
               setSheetOpen(false);
             }}
           >
-            {selected.startsWith('LR')
-              ? 'View receiver close-up'
-              : 'Zoom to component'}{' '}
+            {view === 'twin'
+              ? 'Fly to component'
+              : selected.startsWith('LR')
+                ? 'View receiver close-up'
+                : 'Zoom to component'}{' '}
             <ArrowUpRight size={14} />
           </button>
           <p className="calm-small">Operating a valve stops the simulation.</p>
@@ -956,7 +960,7 @@ export default function Home() {
         </div>
       ) : (
         <p className="calm-hint">
-          Select a marker on the photograph, or choose a valve here. Group
+          Select a part in the 3D view or on the photograph, or choose a valve here. Group
           markers zoom in to reveal individual valves.
         </p>
       )}
@@ -1148,7 +1152,8 @@ export default function Home() {
       ) : surface === 'explore' ? (
         <div
           className={
-            'calm-workspace ' + (view !== 'equipment' ? 'visual-only' : '')
+            'calm-workspace ' +
+            (view !== 'equipment' && view !== 'twin' ? 'visual-only' : '')
           }
         >
           <section className="calm-visual">
@@ -1163,11 +1168,11 @@ export default function Home() {
                 onChange={(e) => setView(e.target.value as typeof view)}
               >
                 {[
-                  ['equipment', 'Equipment'],
+                  ['twin', '3D twin'],
+                  ['equipment', 'Photo'],
                   ['tubes', 'Glass tubes'],
                   ['circuit', 'Circuit reference'],
                   ['cycle', 'p–h cycle'],
-                  ['model', '3D inspection · optional'],
                 ].map(([value, label]) => (
                   <NativeSelectOption key={value} value={value}>
                     {label}
@@ -1188,7 +1193,7 @@ export default function Home() {
               {model.config?.mode ?? 'Custom circuit'}. Values are not live
               measurements.
             </p>
-            {view !== 'equipment' && (
+            {view !== 'equipment' && view !== 'twin' && (
               <div className="simulation-tools">
                 <Button variant="outline" onClick={() => setDialog('settings')}>
                   Example setup
@@ -1200,10 +1205,23 @@ export default function Home() {
             )}
             <div
               className={
-                'calm-stage ' + (view === 'equipment' ? 'is-equipment' : '')
+                'calm-stage ' +
+                (view === 'equipment' || view === 'twin' ? 'is-equipment' : '')
               }
             >
-              {view === 'equipment' ? (
+              {view === 'twin' ? (
+                <TwinView
+                  valves={valves}
+                  model={model}
+                  refrigerant={r}
+                  running={running}
+                  selected={selected}
+                  onSelect={selectValve}
+                  showLabels={showLabels}
+                  onToggleLabels={() => setShowLabels(!showLabels)}
+                  focusRequest={focusRequest}
+                />
+              ) : view === 'equipment' ? (
                 <Equipment
                   receiverOpen={receiverOpen}
                   onReceiverOpenChange={setReceiverOpen}
@@ -1227,8 +1245,6 @@ export default function Home() {
                     if (id === 'condenser-out' && v) markTutorial('tube');
                   }}
                 />
-              ) : view === 'model' ? (
-                <ModelPilot />
               ) : view === 'cycle' ? (
                 <PHChart
                   r={r}
@@ -1258,7 +1274,7 @@ export default function Home() {
               )}
             </div>
           </section>
-          {view === 'equipment' && (
+          {(view === 'equipment' || view === 'twin') && (
             <aside
               className={'calm-inspector ' + (sheetOpen ? 'sheet-open' : '')}
             >
@@ -1412,8 +1428,8 @@ export default function Home() {
               </p>
               <p>
                 Startup, faults, fan-speed changes and AXV operation are not
-                simulated. The 3D pilot is illustrative geometry, not a measured
-                replica.
+                simulated. The 3D twin is illustrative geometry built from photographs and
+                published dimensions, not a survey.
               </p>
               <details>
                 <summary>Model assumptions</summary>
