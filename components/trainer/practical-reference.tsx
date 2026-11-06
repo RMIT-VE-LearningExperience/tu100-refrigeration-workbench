@@ -1,5 +1,6 @@
 'use client';
 /* oxlint-disable next/no-img-element */
+import { asset } from '@/lib/base';
 import { useState } from 'react';
 import { ArrowRight, ZoomIn, Scan } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -121,7 +122,7 @@ export function PartReference({
               }}
             >
               <img
-                src="/assets/trainer.jpg"
+                src={asset('/assets/trainer.jpg')}
                 alt={`${stage.name} close-up on the actual trainer`}
                 style={{
                   width: `${10000 / photoStage.photo.width}%`,
@@ -133,7 +134,7 @@ export function PartReference({
           ) : (
             <div className="reference-whole">
               <img
-                src="/assets/trainer.jpg"
+                src={asset('/assets/trainer.jpg')}
                 alt="The RMIT TU-100 refrigeration trainer"
               />
               <span

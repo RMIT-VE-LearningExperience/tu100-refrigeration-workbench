@@ -1,4 +1,5 @@
 'use client';
+import { asset } from '@/lib/base';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -224,7 +225,7 @@ export function Equipment({
           >
             <img
               draggable={false}
-              src="/assets/trainer.jpg"
+              src={asset('/assets/trainer.jpg')}
               alt="RMIT Imperial TU-100 refrigeration training unit"
             />
             {clusters.map((group) =>
@@ -328,7 +329,7 @@ export function Equipment({
           {tutorial}
           <div className="receiver-photo">
             <img
-              src="/assets/receiver-valves.jpg"
+              src={asset('/assets/receiver-valves.jpg')}
               width="1500"
               height="950"
               alt="Receiver close-up: LRB on the left, LRI in the middle, and LRK at the front right."

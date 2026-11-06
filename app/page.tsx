@@ -28,6 +28,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { TwinView } from '@/components/twin/twin-view';
+import { asset } from '@/lib/base';
 import { Equipment } from '@/components/trainer/equipment';
 import { ObservationTubes } from '@/components/trainer/observation-tubes';
 import {
@@ -509,7 +510,7 @@ export default function Home() {
   useEffect(() => {
     if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production')
       navigator.serviceWorker
-        .register('/sw.js')
+        .register(asset('/sw.js'))
         .then(() => navigator.serviceWorker.ready)
         .then(() => setOffline('Offline package ready'))
         .catch(() => setOffline('Online session'));
@@ -1256,7 +1257,7 @@ export default function Home() {
               ) : (
                 <div className="circuit-view">
                   <img
-                    src="/assets/circuit.png"
+                    src={asset('/assets/circuit.png')}
                     alt="TU-100 cooling circuit reference with reversing valves, metering devices, receiver and accumulator"
                   />
                   <p className="micro">

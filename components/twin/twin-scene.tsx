@@ -25,8 +25,9 @@ import {
 } from '@/lib/twin';
 import { VALVE_NAMES, type Valve, type ValveState, type simulate } from '@/lib/model';
 import { observationStates } from '@/lib/observation';
+import { asset } from '@/lib/base';
 
-export const MODEL_URL = '/models/tu100-unit.glb';
+export const MODEL_URL = asset('/models/tu100-unit.glb');
 export type Pick = { kind: 'valve'; id: Valve } | { kind: 'component'; id: string } | null;
 export type TwinSceneProps = {
   valves: ValveState;

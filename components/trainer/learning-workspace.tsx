@@ -2,6 +2,7 @@
 /* oxlint-disable react/react-compiler, jsx-a11y/prefer-tag-over-role, next/no-img-element */
 // Read browser storage after hydration. Composite live regions contain block feedback;
 // local photo crops intentionally use the existing static image without a server optimizer.
+import { asset } from '@/lib/base';
 import { useEffect, useRef, useState } from 'react';
 import {
   ArrowRight,
@@ -303,7 +304,7 @@ function CycleActivity({
                   }}
                 >
                   <img
-                    src="/assets/trainer.jpg"
+                    src={asset('/assets/trainer.jpg')}
                     alt={`${stage.name}, ${stage.location}, on the RMIT TU-100`}
                     draggable={false}
                     style={{
@@ -316,7 +317,7 @@ function CycleActivity({
               ) : (
                 <div className="learn-photo-unit">
                   <img
-                    src="/assets/trainer.jpg"
+                    src={asset('/assets/trainer.jpg')}
                     alt="RMIT TU-100: upper evaporator coil, lower condenser coil, expansion valve at the upper right and compressor at the bottom right in cooling mode."
                     draggable={false}
                   />
